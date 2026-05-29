@@ -1,0 +1,201 @@
+{
+    "asset": {
+        "version": "2.0",
+        "generator": "Open Asset Import Library (assimp v3.1.149782207)"
+    },
+    "accessors": [
+        {
+            "bufferView": 0,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 3389,
+            "type": "VEC3",
+            "max": [
+                17.669506072998048,
+                17.92551612854004,
+                18.564228057861329
+            ],
+            "min": [
+                -17.666017532348634,
+                -22.664052963256837,
+                -22.12877655029297
+            ]
+        },
+        {
+            "bufferView": 1,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 3389,
+            "type": "VEC3",
+            "max": [
+                0.9997260570526123,
+                0.9996089339256287,
+                0.9999862313270569
+            ],
+            "min": [
+                -0.9984670877456665,
+                -0.9998760223388672,
+                -0.9999222755432129
+            ]
+        },
+        {
+            "bufferView": 2,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 3389,
+            "type": "VEC4",
+            "max": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "min": [
+                -0.9999642968177795,
+                -0.9999306201934815,
+                -0.999860405921936,
+                -0.9999642968177795
+            ]
+        },
+        {
+            "bufferView": 3,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 3389,
+            "type": "VEC2",
+            "max": [
+                0.9881439805030823,
+                0.9911580085754395
+            ],
+            "min": [
+                0.009363999590277672,
+                0.014315009117126465
+            ]
+        },
+        {
+            "bufferView": 4,
+            "byteOffset": 0,
+            "componentType": 5123,
+            "count": 19368,
+            "type": "SCALAR",
+            "max": [
+                3388.0
+            ],
+            "min": [
+                0.0
+            ]
+        }
+    ],
+    "buffers": [
+        {
+            "byteLength": 201408,
+            "uri": "JadeToad.bin"
+        }
+    ],
+    "bufferViews": [
+        {
+            "buffer": 0,
+            "byteOffset": 0,
+            "byteLength": 40668,
+            "target": 34962
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 40668,
+            "byteLength": 40668,
+            "target": 34962
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 81336,
+            "byteLength": 54224,
+            "target": 34962
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 135560,
+            "byteLength": 27112,
+            "target": 34962
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 162672,
+            "byteLength": 38736,
+            "target": 34963
+        }
+    ],
+    "materials": [
+        {
+            "name": "Toad_Final_Low_Group28800SG1",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            }
+        }
+    ],
+    "meshes": [
+        {
+            "name": "Toad_Final_Low:Group28800",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 0,
+                    "indices": 4,
+                    "attributes": {
+                        "POSITION": 0,
+                        "NORMAL": 1,
+                        "TANGENT": 2,
+                        "TEXCOORD_0": 3
+                    }
+                }
+            ]
+        }
+    ],
+    "nodes": [
+        {
+            "name": "Toad_Final_Scale_Low.obj",
+            "matrix": [
+                0.009999999776482582,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.009999999776482582,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.009999999776482582,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "children": [
+                1,
+                2
+            ]
+        },
+        {
+            "name": "g default"
+        },
+        {
+            "name": "g Toad_Final_Low:Group28800",
+            "mesh": 0
+        }
+    ],
+    "scenes": [
+        {
+            "nodes": [
+                0
+            ]
+        }
+    ],
+    "scene": 0
+}
