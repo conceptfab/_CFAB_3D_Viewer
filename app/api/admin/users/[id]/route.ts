@@ -6,6 +6,9 @@ import { db } from '@/lib/db';
 import { users, sessions } from '@/lib/db/schema';
 import { eq, and, count } from 'drizzle-orm';
 
+// Walidacja kształtu UUID — chroni przed błędem 500 z Postgresa przy nie-UUID id.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // PATCH /api/admin/users/[id] — zmiana roli lub statusu
 export async function PATCH(
   req: Request,
@@ -13,6 +16,10 @@ export async function PATCH(
 ) {
   await requireAdmin();
   const { id } = await params;
+
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json({ error: 'Nieprawidłowy identyfikator' }, { status: 400 });
+  }
 
   let body: unknown;
   try {
@@ -88,6 +95,10 @@ export async function DELETE(
 ) {
   await requireAdmin();
   const { id } = await params;
+
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json({ error: 'Nieprawidłowy identyfikator' }, { status: 400 });
+  }
 
   // Pobierz usera do sprawdzenia anty-lockout
   const targetRows = await db
