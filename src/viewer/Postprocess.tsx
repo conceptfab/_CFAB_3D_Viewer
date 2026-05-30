@@ -1,20 +1,30 @@
+import { useMemo } from 'react';
 import { EffectComposer, ToneMapping, SMAA } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
+import { useStore, type ToneMode } from '../store';
+import { ExposureEffect } from '../scene/exposureEffect';
 
-/**
- * Minimal clean post-FX baseline:
- *  - KHRONOS_NEUTRAL tone mapping — forgiving roll-off, keeps the neutral grey
- *    sweep neutral.
- *  - SMAA for clean edges.
- *
- * N8AO + Bloom removed for now — screen-space AO haloed around the thin tripod
- * legs and Bloom amplified specular aliasing into sparkles. Re-add carefully
- * (gentler settings) once the baseline is confirmed clean.
- */
+const TONE_MODE: Record<ToneMode, ToneMappingMode> = {
+  NEUTRAL: ToneMappingMode.NEUTRAL,
+  ACES_FILMIC: ToneMappingMode.ACES_FILMIC,
+  AGX: ToneMappingMode.AGX,
+  REINHARD: ToneMappingMode.REINHARD,
+};
+
+function Exposure({ value }: { value: number }) {
+  const effect = useMemo(() => new ExposureEffect(value), []);
+  effect.exposure = value;
+  return <primitive object={effect} dispose={null} />;
+}
+
 export function Postprocess() {
+  const mode = useStore((s) => s.config.tone.mode);
+  const exposure = useStore((s) => s.config.tone.exposure);
+
   return (
     <EffectComposer multisampling={4}>
-      <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+      <Exposure value={exposure} />
+      <ToneMapping mode={TONE_MODE[mode]} />
       <SMAA />
     </EffectComposer>
   );
