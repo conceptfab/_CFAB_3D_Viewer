@@ -4,7 +4,7 @@
 
 **Goal:** Pełne zarządzanie kamerami w outlinerze i obu paskach viewportów: dodawanie/usuwanie, zmiana nazwy, kolejność (drag w outlinerze przekłada się na kolejność w paskach), oraz checkbox „pokaż w finalnym widoku" sterujący widocznością kamery na pasku finalnego widoku.
 
-**Architecture:** Migracja modelu z `Record<string, CameraPresetView>` na uporządkowaną tablicę `cameras: CameraDef[]` (każda kamera ma stabilne `id`, edytowalną `name`, pozycję/target/fov oraz flagę `showInFinalBar`). Outliner renderuje listę w kolejności tablicy z przyciskami ↑/↓/+/✕. Pasek finalnego widoku filtruje po `showInFinalBar`; pasek edytora (ViewButtons) pokazuje rzuty ortho/persp + wszystkie kamery sceny. Klik kamery w pasku edytora ustawia ją aktywną i przełącza `editorView='camera'`.
+**Architecture:** Migracja modelu z `Record<string, CameraPresetView>` na uporządkowaną tablicę `cameras: CameraDef[]` (każda kamera ma stabilne `id`, edytowalną `name`, pozycję/target/fov oraz flagę `showInFinalBar`). Outliner renderuje listę w kolejności tablicy z przyciskami ↑/↓/+/✕. Pasek finalnego widoku filtruje po `showInFinalBar`. Pasek edytora jest **dwurzędowy** (`viewport-stack`): górny rząd = rzuty ortho/persp (`setEditorView`), dolny rząd = wszystkie kamery sceny w kolejności outlinera (klik = `setCamera({active: id})` + `setEditorView('camera')`).
 
 **Tech Stack:** React 18, @react-three/fiber 8, drei 9, leva 0.9, zustand 5, Vite/TS, vitest 2.
 
@@ -24,8 +24,8 @@
 - `src/ui/Outliner.tsx` — **modify**: render kamer z przyciskami ↑/↓/✕ na wiersz + przycisk „+ dodaj kamerę" na końcu sekcji. Etykieta = `name`.
 - `src/ui/Inspector.tsx` — **modify**: `CameraControls` dostaje `name` (text), `showInFinalBar` (toggle) i przycisk „Usuń kamerę" (disabled przy 1 pozostałej).
 - `src/ui/CameraButtons.tsx` — **modify**: lista kamer filtrowana po `showInFinalBar`; etykieta z `name`.
-- `src/ui/ViewButtons.tsx` — **modify**: po przyciskach ortho/persp dochodzi sekcja kamer (wszystkie); klik = `setCamera({active: id})` + `setEditorView('camera')`. Podświetlenie aktywnej tylko gdy `editorView === 'camera'`.
-- `src/styles.css` — **modify**: drobne style dla ↑/↓/✕ w outlinerze i wizualnego separatora między rzutami a kamerami w `ViewButtons`.
+- `src/ui/ViewButtons.tsx` — **modify**: dwa wiersze w jednym kontenerze `viewport-stack`: górny rząd rzutów (`setEditorView`) i dolny rząd kamer (`setCamera({active: id})` + `setEditorView('camera')`). Podświetlenie aktywnej kamery tylko gdy `editorView === 'camera'`.
+- `src/styles.css` — **modify**: style dla ↑/↓/✕ w outlinerze oraz nowy `.viewport-stack` (kontener pionowy dla 2 rzędów w pasku edytora).
 
 ---
 
@@ -1037,7 +1037,7 @@ git commit -m "feat(camera-bar): filter final-view bar by showInFinalBar"
 
 ---
 
-## Task 6: ViewButtons — rzuty + lista kamer po Persp
+## Task 6: ViewButtons — dwa rzędy (rzuty na górze, kamery na dole)
 
 **Files:**
 - Modify: `src/ui/ViewButtons.tsx`
@@ -1059,10 +1059,10 @@ const PROJECTIONS: { id: EditorView; label: string }[] = [
 ];
 
 /**
- * Pasek dolny środkowego viewportu:
- *  - lewa część: rzuty ortho + Persp (setEditorView)
- *  - prawa część: lista kamer sceny w kolejności outlinera; klik = ustawia
- *    kamerę aktywną i przełącza editorView='camera'.
+ * Pasek dolny środkowego viewportu — DWA RZĘDY:
+ *  - górny: rzuty ortho + Persp (setEditorView)
+ *  - dolny: kamery sceny w kolejności outlinera; klik = ustawia kamerę
+ *    aktywną i przełącza editorView='camera'.
  */
 export function ViewButtons() {
   const view = useStore((s) => s.editorView);
@@ -1072,48 +1072,62 @@ export function ViewButtons() {
   const setCamera = useStore((s) => s.setCamera);
 
   return (
-    <div className="viewport-bar viewport-bar--bottom">
-      {PROJECTIONS.map((v) => (
-        <button
-          key={v.id}
-          className={view === v.id ? 'active' : ''}
-          onClick={() => setEditorView(v.id)}
-        >
-          {v.label}
-        </button>
-      ))}
-      <span className="viewport-bar__sep" aria-hidden />
-      {cameras.map((c) => {
-        const isActive = view === 'camera' && active === c.id;
-        return (
+    <div className="viewport-stack viewport-stack--bottom">
+      <div className="viewport-bar">
+        {PROJECTIONS.map((v) => (
           <button
-            key={c.id}
-            className={isActive ? 'active' : ''}
-            onClick={() => {
-              setCamera({ active: c.id });
-              setEditorView('camera');
-            }}
-            title={c.id}
+            key={v.id}
+            className={view === v.id ? 'active' : ''}
+            onClick={() => setEditorView(v.id)}
           >
-            📷 {c.name}
+            {v.label}
           </button>
-        );
-      })}
+        ))}
+      </div>
+      <div className="viewport-bar">
+        {cameras.map((c) => {
+          const isActive = view === 'camera' && active === c.id;
+          return (
+            <button
+              key={c.id}
+              className={isActive ? 'active' : ''}
+              onClick={() => {
+                setCamera({ active: c.id });
+                setEditorView('camera');
+              }}
+              title={c.id}
+            >
+              📷 {c.name}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 ```
 
-- [ ] **Step 2: Dorzuć separator** — na końcu `src/styles.css` dopisz:
+- [ ] **Step 2: Dorzuć kontener `viewport-stack`** — na końcu `src/styles.css` dopisz:
 
 ```css
-.viewport-bar__sep {
-  display: inline-block;
-  width: 1px;
-  height: 18px;
-  margin: 0 4px;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 1px;
+/* Dwurzędowy stos pasków (środkowy viewport: rzuty + kamery). */
+.viewport-stack {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.viewport-stack--bottom { bottom: 12px; }
+/* Wewnątrz stacka paski nie pozycjonują się same. */
+.viewport-stack .viewport-bar {
+  position: static;
+  left: auto;
+  bottom: auto;
+  transform: none;
 }
 ```
 
@@ -1152,7 +1166,7 @@ Otwórz `http://localhost:5173/`.
 
 - [ ] **Step 2: Przejdź checklistę**
 
-1. **Outliner — kolejność**: w sekcji „Kamery" widać 5 kamer (Hero/Front/Side/Top/Detail). Najedź na wiersz kamery — pojawiają się ↑/↓/✕. Strzałkę ↑ przy pierwszej i ↓ przy ostatniej są wyszarzone. Kliknij ↓ przy „Hero" → przesuwa o jedno w dół; pasek finalnego widoku natychmiast pokazuje nową kolejność (Front, Hero, Side, Top, Detail). Pasek edytora (sekcja po separatorze) też.
+1. **Outliner — kolejność**: w sekcji „Kamery" widać 5 kamer (Hero/Front/Side/Top/Detail). Najedź na wiersz kamery — pojawiają się ↑/↓/✕. Strzałka ↑ przy pierwszej i ↓ przy ostatniej są wyszarzone. Kliknij ↓ przy „Hero" → przesuwa o jedno w dół; pasek finalnego widoku natychmiast pokazuje nową kolejność (Front, Hero, Side, Top, Detail). Dolny rząd paska edytora (kamery) też.
 
 2. **Outliner — dodawanie**: kliknij „+ dodaj kamerę" → na końcu pojawia się nowa pozycja `Kamera 6`. Zaznacz ją → otwiera się jej inspektor.
 
@@ -1164,9 +1178,9 @@ Otwórz `http://localhost:5173/`.
 
 6. **Inspector — usuń ostatnią**: usuń kolejne kamery aż zostanie jedna — przycisk „Usuń kamerę" zostaje wyszarzony. ✕ w outlinerze również.
 
-7. **Pasek edytora — klik kamery**: kliknij na pasku edytora kamerę „Front" → środkowy viewport przełącza się w widok z perspektywy „Front" i podświetla ten przycisk; w outlinerze „Front" oznaczona jako „aktywna".
+7. **Pasek edytora — dwa rzędy**: środkowy viewport ma na dole DWA wiersze przycisków — górny z rzutami (Top/Bottom/.../Persp), dolny z kamerami sceny. Kliknij w dolnym rzędzie „Front" → środkowy viewport przełącza się w widok z perspektywy kamery „Front", podświetla się ten przycisk w dolnym rzędzie i ŻADEN przycisk w górnym rzędzie nie jest podświetlony; w outlinerze „Front" oznaczona jako „aktywna".
 
-8. **Aktywna ↔ paski**: ustaw kamerę „Hero" jako aktywną → na pasku finalnego widoku „Hero" podświetlone żółto; w pasku edytora wyłącz „Kamera" (klikając np. „Persp") → kamery przestają być podświetlone, mimo że jedna jest aktywna w sensie sceny.
+8. **Aktywna ↔ paski**: ustaw kamerę „Hero" jako aktywną → na pasku finalnego widoku „Hero" podświetlone żółto; w pasku edytora kliknij „Persp" w górnym rzędzie → kamery w dolnym rzędzie przestają być podświetlone, mimo że jedna jest aktywna w sensie sceny (bo `editorView !== 'camera'`).
 
 9. **Gizmo + zapis widoku**: zaznacz kamerę „Front", przesuń ją gizmem w viewporcie edycji → pola „pozycja" w inspektorze aktualizują się; finalny widok się zmienia (jeżeli Front aktywna w sensie sceny i wybrana). Naciśnij „Zapisz z aktualnego widoku" → pola pozycji/target/fov aktualizują się do bieżącego stanu kamery.
 
