@@ -1,71 +1,59 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { useStore, MODELS } from '../store';
-import { getMaterial } from './materials/library';
+import { useStore } from '../store';
 
-export function Product() {
-  const modelId = useStore((s) => s.modelId);
-  const materialId = useStore((s) => s.material);
+function LoadedModel({ url }: { url: string }) {
+  const envMapIntensity = useStore((s) => s.config.material.envMapIntensity);
   const setModelSize = useStore((s) => s.setModelSize);
 
-  const def = useMemo(
-    () => MODELS.find((m) => m.id === modelId) ?? MODELS[0],
-    [modelId]
-  );
-
-  const { scene } = useGLTF(def.url);
+  const { scene } = useGLTF(url);
   const ref = useRef<THREE.Group>(null);
 
-  // Clone AND set shadow flags at render time — must be sync so AccumulativeShadows
-  // sees castShadow=true on the very first frame it accumulates.
   const cloned = useMemo(() => {
     const c = scene.clone(true);
     c.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh) {
-        const m = o as THREE.Mesh;
-        m.castShadow = true;
-        m.receiveShadow = true;
-        if (m.geometry && !m.geometry.attributes.normal) {
-          m.geometry.computeVertexNormals();
-        }
-        // Bump texture anisotropy + env reflection strength for crisper PBR look
-        const mats = Array.isArray(m.material) ? m.material : [m.material];
-        for (const raw of mats) {
-          const mat = raw as THREE.MeshStandardMaterial;
-          if (!mat) continue;
-          for (const key of [
-            'map',
-            'normalMap',
-            'roughnessMap',
-            'metalnessMap',
-            'aoMap',
-            'emissiveMap',
-          ] as const) {
-            const tex = (mat as any)[key] as THREE.Texture | null | undefined;
-            if (tex) tex.anisotropy = 16;
-          }
-          if ('envMapIntensity' in mat) {
-            mat.envMapIntensity = 1.0;
-          }
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      m.castShadow = true;
+      m.receiveShadow = true;
+      if (m.geometry && !m.geometry.attributes.normal) {
+        m.geometry.computeVertexNormals();
+      }
+      const mats = Array.isArray(m.material) ? m.material : [m.material];
+      for (const raw of mats) {
+        const mat = raw as THREE.MeshStandardMaterial;
+        if (!mat) continue;
+        for (const key of [
+          'map',
+          'normalMap',
+          'roughnessMap',
+          'metalnessMap',
+          'aoMap',
+          'emissiveMap',
+        ] as const) {
+          const tex = (mat as any)[key] as THREE.Texture | null | undefined;
+          if (tex) tex.anisotropy = 16;
         }
       }
     });
     return c;
   }, [scene]);
 
-  // Material override applies in effect (safe — doesn't affect shadow shape)
+  // Globalny envMapIntensity ze storu (live).
   useEffect(() => {
-    if (!def.overrideMaterial) return;
-    const override = getMaterial(materialId);
     cloned.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh) {
-        (o as THREE.Mesh).material = override;
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      const mats = Array.isArray(m.material) ? m.material : [m.material];
+      for (const raw of mats) {
+        const mat = raw as THREE.MeshStandardMaterial;
+        if (mat && 'envMapIntensity' in mat) mat.envMapIntensity = envMapIntensity;
       }
     });
-  }, [cloned, materialId, def.overrideMaterial]);
+  }, [cloned, envMapIntensity]);
 
-  // Auto-fit & center
+  // Auto-fit & center do wysokości docelowej.
   useEffect(() => {
     if (!ref.current) return;
     const group = ref.current;
@@ -74,24 +62,26 @@ export function Product() {
 
     const box = new THREE.Box3().setFromObject(cloned);
     const size = box.getSize(new THREE.Vector3());
-    const scale = def.targetHeight / size.y;
+    const targetHeight = 1.4;
+    const scale = size.y > 0 ? targetHeight / size.y : 1;
     group.scale.setScalar(scale);
 
     const box2 = new THREE.Box3().setFromObject(cloned);
     const center2 = box2.getCenter(new THREE.Vector3());
     group.position.x = -center2.x;
     group.position.z = -center2.z;
-    // Lift very slightly above the floor disc so the receiver plane sits cleanly
-    // below all model geometry — prevents the shadow "hole" at the contact tangent.
     group.position.y = -box2.min.y + 0.005;
 
-    // Publish world-space size so the studio (shadows/frustum) adapts to any
-    // dynamically swapped object.
     const s = box2.getSize(new THREE.Vector3());
     setModelSize([s.x, s.y, s.z]);
-  }, [cloned, def.targetHeight, setModelSize]);
+  }, [cloned, setModelSize]);
 
   return <primitive ref={ref} object={cloned} />;
 }
 
-MODELS.forEach((m) => useGLTF.preload(m.url));
+export function Product() {
+  const loadedModel = useStore((s) => s.loadedModel);
+  if (!loadedModel) return null;
+  // key=objectUrl → pełny remount loadera przy zmianie pliku.
+  return <LoadedModel key={loadedModel.objectUrl} url={loadedModel.objectUrl} />;
+}
