@@ -220,7 +220,8 @@ export const useStore = create<State>((set) => ({
 
   editorView: 'perspective',
   setEditorView: (editorView) => set({ editorView }),
-  selected: 'hero',
+  // Pusty string = nic nie zaznaczone → inspektor pokazuje parametry sceny.
+  selected: '',
   setSelected: (selected) => set({ selected }),
   gizmoMode: 'translate',
   setGizmoMode: (gizmoMode) => set({ gizmoMode }),

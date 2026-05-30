@@ -330,12 +330,16 @@ function CameraControlsInner({
 }
 
 /** Inspektor kontekstowy — panel adekwatny do zaznaczonego elementu outlinera. */
+const PANEL_IDS = ['render', 'background', 'environment', 'branding', 'hero', 'actor', 'light'];
+
 export function Inspector() {
   const selected = useStore((s) => s.selected);
   const camId = selected.startsWith('cam:') ? selected.slice(4) : null;
+  // Nic / nierozpoznane zaznaczenie → parametry sceny (jak 'scene').
+  const showScene = !camId && !PANEL_IDS.includes(selected);
   return (
     <div className="inspector">
-      {selected === 'scene' && <SceneControls />}
+      {showScene && <SceneControls />}
       {selected === 'render' && <RenderControls />}
       {selected === 'background' && <BackgroundControls />}
       {selected === 'environment' && <EnvironmentControls />}
