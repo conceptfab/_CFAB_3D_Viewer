@@ -1,3 +1,4 @@
+'use client';
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Environment, SoftShadows } from '@react-three/drei';

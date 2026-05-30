@@ -1,3 +1,4 @@
+'use client';
 import { useStore, type EditorView } from '../store';
 
 const PROJECTIONS: { id: EditorView; label: string }[] = [

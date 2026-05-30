@@ -1,3 +1,4 @@
+'use client';
 import { useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../store';
 

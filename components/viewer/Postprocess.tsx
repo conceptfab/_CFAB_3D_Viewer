@@ -1,3 +1,4 @@
+'use client';
 import { useMemo } from 'react';
 import { EffectComposer, ToneMapping, SMAA } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';

@@ -1,3 +1,4 @@
+'use client';
 import { Viewer } from './viewer/Viewer';
 import { EditorView } from './viewer/EditorView';
 import { ModelDropzone } from './viewer/ModelDropzone';
