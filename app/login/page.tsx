@@ -6,7 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get('from') ?? '/';
+  // Guard open-redirect: tylko ścieżki wewnętrzne (odrzuć //host i absolutne URL).
+  const rawFrom = searchParams.get('from') ?? '/';
+  const from = rawFrom.startsWith('/') && !rawFrom.startsWith('//') ? rawFrom : '/';
 
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');

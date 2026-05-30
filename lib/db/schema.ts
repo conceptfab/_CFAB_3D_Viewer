@@ -1,4 +1,4 @@
-import { pgTable, text, uuid, timestamp, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid, timestamp, integer, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Tabela użytkowników (biała lista = status='allowed', czarna = status='blocked').
@@ -23,7 +23,10 @@ export const loginCodes = pgTable('login_codes', {
   consumedAt: timestamp('consumed_at', { withTimezone: true }),
   attempts: integer('attempts').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
-});
+}, (t) => [
+  // Rate-limit (count po email w oknie czasu) + wyszukanie najnowszego kodu.
+  index('login_codes_email_created_at_idx').on(t.email, t.createdAt),
+]);
 
 // Sesje (token opaque w cookie, hash w DB).
 export const sessions = pgTable('sessions', {
@@ -34,7 +37,10 @@ export const sessions = pgTable('sessions', {
   tokenHash: text('token_hash').notNull().unique(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
-});
+}, (t) => [
+  // Kasowanie sesji usera przy blokadzie/wylogowaniu-wszędzie.
+  index('sessions_user_id_idx').on(t.userId),
+]);
 
 export type UserRow = typeof users.$inferSelect;
 export type LoginCodeRow = typeof loginCodes.$inferSelect;
