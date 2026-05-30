@@ -1,23 +1,26 @@
 import { useStore } from '../store';
 
 /**
- * Predefiniowane ujęcia kamery — overlay w głównym oknie renderera.
- * Etykiety pochodzą wprost z nazw kamer w storze, więc są spójne z outlinerem.
+ * Pasek presetów kamery w finalnym widoku. Lista pochodzi z `cameras`,
+ * filtrowana po `showInFinalBar`. Kolejność przycisków = kolejność w outlinerze
+ * (kamera na szczycie outlinera = pierwsza z lewej).
  */
 export function CameraButtons() {
-  const presets = useStore((s) => s.config.camera.presets);
+  const cameras = useStore((s) => s.config.camera.cameras);
   const active = useStore((s) => s.config.camera.active);
   const setCamera = useStore((s) => s.setCamera);
-  const ids = Object.keys(presets);
+  const visible = cameras.filter((c) => c.showInFinalBar);
+  if (visible.length === 0) return null;
   return (
     <div className="viewport-bar viewport-bar--bottom">
-      {ids.map((id) => (
+      {visible.map((c) => (
         <button
-          key={id}
-          className={active === id ? 'active' : ''}
-          onClick={() => setCamera({ active: id })}
+          key={c.id}
+          className={active === c.id ? 'active' : ''}
+          onClick={() => setCamera({ active: c.id })}
+          title={c.id}
         >
-          {id}
+          {c.name}
         </button>
       ))}
     </div>
