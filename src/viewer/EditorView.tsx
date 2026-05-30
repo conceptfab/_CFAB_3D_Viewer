@@ -1,6 +1,12 @@
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
+import {
+  OrbitControls,
+  PerspectiveCamera,
+  OrthographicCamera,
+  GizmoHelper,
+  GizmoViewcube,
+} from '@react-three/drei';
 import { Product } from './Product';
 import { Gizmos } from './Gizmos';
 import { SceneIcons } from './SceneIcons';
@@ -113,6 +119,17 @@ export function EditorView() {
       <EditorRig key={view} view={view} />
       <Gizmos />
       <SceneIcons />
+
+      {/* Nawigacyjna kostka widoku (jak w C4D/Blenderze) — klik na ściankę/krawędź
+          obraca kamerę do danego rzutu. */}
+      <GizmoHelper alignment="top-right" margin={[64, 64]}>
+        <GizmoViewcube
+          color="#3a3d46"
+          textColor="#e8eaed"
+          strokeColor="#1b1c20"
+          hoverColor="#ffcc33"
+        />
+      </GizmoHelper>
     </Canvas>
   );
 }
