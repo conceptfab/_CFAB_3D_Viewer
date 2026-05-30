@@ -81,7 +81,8 @@ export async function POST(req: Request) {
 
   const user = userRows[0];
 
-  if (!user || user.status === 'blocked') {
+  // Parytet z getCurrentUser: wpuszczamy tylko status 'allowed' (defense-in-depth).
+  if (!user || user.status !== 'allowed') {
     return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 });
   }
 

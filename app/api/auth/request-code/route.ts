@@ -5,7 +5,7 @@ import { generateCode, hashCode } from '@/lib/auth/code';
 import { sendLoginCode, createSmtpTransport } from '@/lib/auth/email';
 import { db } from '@/lib/db';
 import { loginCodes, users } from '@/lib/db/schema';
-import { eq, and, gt, isNull, count } from 'drizzle-orm';
+import { eq, and, gt, count } from 'drizzle-orm';
 
 // Odpowiedź zawsze identyczna — brak enumeracji adresów.
 const GENERIC_OK = { message: 'Jeśli adres jest na liście, wysłaliśmy kod logowania.' };
