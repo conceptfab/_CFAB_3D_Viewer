@@ -4,37 +4,45 @@ import * as THREE from 'three';
 import { useStore, type Vec3 } from '../store';
 
 /**
- * Uchwyt światła w viewporcie edycyjnym: złota kulka w pozycji key-lighta,
- * przeciągnij = przesuń światło (zapis do storu na żywo). TransformControls drei
- * sam wyłącza aktywne OrbitControls na czas przeciągania.
+ * Marker key-lighta w viewporcie edycyjnym. Zawsze widoczny (klik = zaznacz),
+ * a gdy światło jest zaznaczone — dochodzi gizmo translacji. Sync store→uchwyt
+ * pomijany w trakcie przeciągania.
  */
 function LightGizmo() {
   const position = useStore((s) => s.config.keyLight.position);
+  const selected = useStore((s) => s.selected);
+  const setSelected = useStore((s) => s.setSelected);
   const setKeyLight = useStore((s) => s.setKeyLight);
   const [handle, setHandle] = useState<THREE.Mesh | null>(null);
   const dragging = useRef(false);
 
-  // Sync store → uchwyt, ale nie w trakcie przeciągania (uniknięcie sprzężenia).
   useEffect(() => {
     if (handle && !dragging.current) handle.position.fromArray(position);
   }, [handle, position]);
 
+  const active = selected === 'light';
+
   return (
     <>
-      <mesh ref={setHandle} position={position}>
+      <mesh
+        ref={setHandle}
+        position={position}
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelected('light');
+        }}
+      >
         <sphereGeometry args={[0.09, 20, 20]} />
-        <meshBasicMaterial color="#ffcc33" toneMapped={false} />
+        <meshBasicMaterial color={active ? '#ffd23a' : '#b9962f'} toneMapped={false} />
       </mesh>
-      {handle && (
+      {handle && active && (
         <TransformControls
           object={handle}
           mode="translate"
           size={0.7}
           onMouseDown={() => (dragging.current = true)}
           onMouseUp={() => (dragging.current = false)}
-          onObjectChange={() =>
-            setKeyLight({ position: handle.position.toArray() as Vec3 })
-          }
+          onObjectChange={() => setKeyLight({ position: handle.position.toArray() as Vec3 })}
         />
       )}
     </>
@@ -42,6 +50,5 @@ function LightGizmo() {
 }
 
 export function Gizmos() {
-  const showLight = useStore((s) => s.showLightGizmo);
-  return <>{showLight && <LightGizmo />}</>;
+  return <LightGizmo />;
 }

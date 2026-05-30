@@ -13,6 +13,12 @@ export type EditorView =
   | 'perspective'
   | 'camera';
 
+/** Element sceny zaznaczalny w outlinerze. */
+export type SceneElementId = 'hero' | 'actor' | 'light' | 'camera' | 'environment';
+
+/** Tryb gizmo dla HERO NULL. */
+export type GizmoMode = 'translate' | 'rotate' | 'scale';
+
 export type Vec3 = [number, number, number];
 
 export interface CameraPresetView {
@@ -35,6 +41,9 @@ export interface SceneConfig {
   shadows: { catcherOpacity: number; contactOpacity: number; contactBlur: number };
   tone: { mode: ToneMode; exposure: number };
   material: { envMapIntensity: number };
+  // HERO NULL — transform "aktora" (rotacja w stopniach). Aktora nie edytujemy
+  // bezpośrednio; przesuwamy/rotujemy/skalujemy ten null.
+  hero: { position: Vec3; rotation: Vec3; scale: Vec3 };
   camera: {
     fov: number;
     near: number;
@@ -73,6 +82,7 @@ export const DEFAULT_CONFIG: SceneConfig = {
   shadows: { catcherOpacity: 0.3, contactOpacity: 0.3, contactBlur: 2 },
   tone: { mode: 'NEUTRAL', exposure: 1.0 },
   material: { envMapIntensity: 1.0 },
+  hero: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
   camera: {
     fov: 28,
     near: 0.05,
@@ -125,8 +135,10 @@ interface State {
   // Stan edytora (NIE część serializowanego configu).
   editorView: EditorView;
   setEditorView: (v: EditorView) => void;
-  showLightGizmo: boolean;
-  setShowLightGizmo: (v: boolean) => void;
+  selected: SceneElementId;
+  setSelected: (id: SceneElementId) => void;
+  gizmoMode: GizmoMode;
+  setGizmoMode: (m: GizmoMode) => void;
 
   setEnv: (patch: Partial<SceneConfig['environment']>) => void;
   setBackground: (patch: Partial<SceneConfig['background']>) => void;
@@ -134,6 +146,7 @@ interface State {
   setShadows: (patch: Partial<SceneConfig['shadows']>) => void;
   setTone: (patch: Partial<SceneConfig['tone']>) => void;
   setMaterial: (patch: Partial<SceneConfig['material']>) => void;
+  setHero: (patch: Partial<SceneConfig['hero']>) => void;
   setCamera: (
     patch: Partial<Pick<SceneConfig['camera'], 'fov' | 'near' | 'far' | 'active'>>
   ) => void;
@@ -153,8 +166,10 @@ export const useStore = create<State>((set) => ({
 
   editorView: 'perspective',
   setEditorView: (editorView) => set({ editorView }),
-  showLightGizmo: true,
-  setShowLightGizmo: (showLightGizmo) => set({ showLightGizmo }),
+  selected: 'hero',
+  setSelected: (selected) => set({ selected }),
+  gizmoMode: 'translate',
+  setGizmoMode: (gizmoMode) => set({ gizmoMode }),
 
   setEnv: (patch) =>
     set((s) => ({ config: { ...s.config, environment: { ...s.config.environment, ...patch } } })),
@@ -168,6 +183,8 @@ export const useStore = create<State>((set) => ({
     set((s) => ({ config: { ...s.config, tone: { ...s.config.tone, ...patch } } })),
   setMaterial: (patch) =>
     set((s) => ({ config: { ...s.config, material: { ...s.config.material, ...patch } } })),
+  setHero: (patch) =>
+    set((s) => ({ config: { ...s.config, hero: { ...s.config.hero, ...patch } } })),
   setCamera: (patch) =>
     set((s) => ({ config: { ...s.config, camera: { ...s.config.camera, ...patch } } })),
   setOrbit: (patch) =>

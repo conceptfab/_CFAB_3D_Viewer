@@ -103,7 +103,7 @@ export function EditorView() {
       <EditorLights />
 
       <Suspense fallback={null}>
-        <Product />
+        <Product interactive />
       </Suspense>
 
       <gridHelper args={[20, 40, '#454853', '#2c2e35']} />
