@@ -20,6 +20,9 @@ pnpm-debug.log*
 .env.*
 !.env.example
 
+# Git worktrees
+.worktrees/
+
 # Editor / OS
 .DS_Store
 .vscode/*
