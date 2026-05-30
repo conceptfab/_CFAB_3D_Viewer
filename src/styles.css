@@ -235,12 +235,13 @@ html, body, #root {
   padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-.outliner__head {
-  padding: 4px 12px 6px;
+.outliner__section {
+  padding: 10px 12px 4px;
   font-size: 10px;
-  letter-spacing: 0.6px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
   text-transform: uppercase;
-  color: #80858f;
+  color: #6f747e;
 }
 .outliner__row {
   display: flex;

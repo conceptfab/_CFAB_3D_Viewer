@@ -14,7 +14,15 @@ export type EditorView =
   | 'camera';
 
 /** Element sceny zaznaczalny w outlinerze. */
-export type SceneElementId = 'hero' | 'actor' | 'light' | 'camera' | 'environment';
+export type SceneElementId =
+  | 'scene'
+  | 'render'
+  | 'background'
+  | 'environment'
+  | 'hero'
+  | 'actor'
+  | 'light'
+  | 'camera';
 
 /** Tryb gizmo dla HERO NULL. */
 export type GizmoMode = 'translate' | 'rotate' | 'scale';

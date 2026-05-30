@@ -9,6 +9,122 @@ import {
 const TONE_OPTIONS: ToneMode[] = ['NEUTRAL', 'ACES_FILMIC', 'AGX', 'REINHARD'];
 const GIZMO_MODES: GizmoMode[] = ['translate', 'rotate', 'scale'];
 
+/* --- Scene (parametry globalne: cienie) --- */
+function SceneControls() {
+  const sh = useStore.getState().config.shadows;
+  useControls(
+    'Scene',
+    () => ({
+      catcherOpacity: {
+        value: sh.catcherOpacity,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        onChange: (v: number) => useStore.getState().setShadows({ catcherOpacity: v }),
+      },
+      contactOpacity: {
+        value: sh.contactOpacity,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        onChange: (v: number) => useStore.getState().setShadows({ contactOpacity: v }),
+      },
+      contactBlur: {
+        value: sh.contactBlur,
+        min: 0,
+        max: 6,
+        step: 0.1,
+        onChange: (v: number) => useStore.getState().setShadows({ contactBlur: v }),
+      },
+    }),
+    []
+  );
+  return null;
+}
+
+/* --- Render (tone mapping / ekspozycja) --- */
+function RenderControls() {
+  const t = useStore.getState().config.tone;
+  useControls(
+    'Render',
+    () => ({
+      tone: {
+        value: t.mode,
+        options: TONE_OPTIONS,
+        onChange: (v: ToneMode) => useStore.getState().setTone({ mode: v }),
+      },
+      exposure: {
+        value: t.exposure,
+        min: 0.1,
+        max: 3,
+        step: 0.01,
+        onChange: (v: number) => useStore.getState().setTone({ exposure: v }),
+      },
+    }),
+    []
+  );
+  return null;
+}
+
+/* --- Background (gradient tła) --- */
+function setStop(i: number, v: string) {
+  const cur = useStore.getState().config.background.stops;
+  useStore.getState().setBackground({ stops: replaceStop(cur, i, v) });
+}
+
+function BackgroundControls() {
+  const bg = useStore.getState().config.background;
+  useControls(
+    'Background',
+    () => ({
+      'centrum': { value: bg.stops[0], onChange: (v: string) => setStop(0, v) },
+      'środek': { value: bg.stops[1], onChange: (v: string) => setStop(1, v) },
+      'brzeg': { value: bg.stops[2], onChange: (v: string) => setStop(2, v) },
+      'róg': { value: bg.stops[3], onChange: (v: string) => setStop(3, v) },
+      centerY: {
+        value: bg.centerY,
+        min: 0.2,
+        max: 0.8,
+        step: 0.01,
+        onChange: (v: number) => useStore.getState().setBackground({ centerY: v }),
+      },
+    }),
+    []
+  );
+  return null;
+}
+
+/* --- Environment (IBL / HDRI) --- */
+function EnvironmentControls() {
+  const cfg = useStore.getState().config;
+  useControls(
+    'Environment',
+    () => ({
+      hdri: {
+        value: cfg.environment.hdriUrl,
+        label: 'HDRI url',
+        onChange: (v: string) => useStore.getState().setEnv({ hdriUrl: v }),
+      },
+      intensity: {
+        value: cfg.environment.intensity,
+        min: 0,
+        max: 2,
+        step: 0.01,
+        onChange: (v: number) => useStore.getState().setEnv({ intensity: v }),
+      },
+      envMapIntensity: {
+        value: cfg.material.envMapIntensity,
+        min: 0,
+        max: 3,
+        step: 0.01,
+        onChange: (v: number) => useStore.getState().setMaterial({ envMapIntensity: v }),
+      },
+    }),
+    []
+  );
+  return null;
+}
+
 /* --- HERO NULL --- */
 function HeroControls() {
   const h = useStore.getState().config.hero;
@@ -100,7 +216,7 @@ function CameraControls() {
   const c = useStore.getState().config.camera;
   const presetNames = Object.keys(c.presets);
   useControls(
-    'Kamera',
+    'Camera',
     () => ({
       preset: {
         value: c.active,
@@ -146,91 +262,19 @@ function CameraControls() {
   return null;
 }
 
-/* --- Environment / World --- */
-function setStop(i: number, v: string) {
-  const cur = useStore.getState().config.background.stops;
-  useStore.getState().setBackground({ stops: replaceStop(cur, i, v) });
-}
-
-function EnvironmentControls() {
-  const cfg = useStore.getState().config;
-  useControls(
-    'Środowisko',
-    () => ({
-      'tło centrum': { value: cfg.background.stops[0], onChange: (v: string) => setStop(0, v) },
-      'tło środek': { value: cfg.background.stops[1], onChange: (v: string) => setStop(1, v) },
-      'tło brzeg': { value: cfg.background.stops[2], onChange: (v: string) => setStop(2, v) },
-      'tło róg': { value: cfg.background.stops[3], onChange: (v: string) => setStop(3, v) },
-      centerY: {
-        value: cfg.background.centerY,
-        min: 0.2,
-        max: 0.8,
-        step: 0.01,
-        onChange: (v: number) => useStore.getState().setBackground({ centerY: v }),
-      },
-      hdriIntensity: {
-        value: cfg.environment.intensity,
-        min: 0,
-        max: 2,
-        step: 0.01,
-        onChange: (v: number) => useStore.getState().setEnv({ intensity: v }),
-      },
-      tone: {
-        value: cfg.tone.mode,
-        options: TONE_OPTIONS,
-        onChange: (v: ToneMode) => useStore.getState().setTone({ mode: v }),
-      },
-      exposure: {
-        value: cfg.tone.exposure,
-        min: 0.1,
-        max: 3,
-        step: 0.01,
-        onChange: (v: number) => useStore.getState().setTone({ exposure: v }),
-      },
-      catcherOpacity: {
-        value: cfg.shadows.catcherOpacity,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        onChange: (v: number) => useStore.getState().setShadows({ catcherOpacity: v }),
-      },
-      contactOpacity: {
-        value: cfg.shadows.contactOpacity,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        onChange: (v: number) => useStore.getState().setShadows({ contactOpacity: v }),
-      },
-      contactBlur: {
-        value: cfg.shadows.contactBlur,
-        min: 0,
-        max: 6,
-        step: 0.1,
-        onChange: (v: number) => useStore.getState().setShadows({ contactBlur: v }),
-      },
-      envMapIntensity: {
-        value: cfg.material.envMapIntensity,
-        min: 0,
-        max: 3,
-        step: 0.01,
-        onChange: (v: number) => useStore.getState().setMaterial({ envMapIntensity: v }),
-      },
-    }),
-    []
-  );
-  return null;
-}
-
-/** Inspektor kontekstowy — pokazuje panel adekwatny do zaznaczonego elementu. */
+/** Inspektor kontekstowy — panel adekwatny do zaznaczonego elementu outlinera. */
 export function Inspector() {
   const selected = useStore((s) => s.selected);
   return (
     <div className="inspector">
+      {selected === 'scene' && <SceneControls />}
+      {selected === 'render' && <RenderControls />}
+      {selected === 'background' && <BackgroundControls />}
+      {selected === 'environment' && <EnvironmentControls />}
       {selected === 'hero' && <HeroControls />}
       {selected === 'actor' && <ActorNote />}
       {selected === 'light' && <LightControls />}
       {selected === 'camera' && <CameraControls />}
-      {selected === 'environment' && <EnvironmentControls />}
       <Leva fill flat titleBar={false} />
     </div>
   );
