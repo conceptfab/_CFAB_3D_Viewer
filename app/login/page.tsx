@@ -81,6 +81,8 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="twoj@email.com"
+              aria-label="Adres e-mail"
+              autoComplete="email"
               required
               autoFocus
               style={styles.input}
@@ -100,6 +102,8 @@ function LoginForm() {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="000000"
+              aria-label="6-cyfrowy kod logowania"
+              autoComplete="one-time-code"
               required
               autoFocus
               maxLength={6}
