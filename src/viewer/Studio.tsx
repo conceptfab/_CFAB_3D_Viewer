@@ -86,8 +86,7 @@ export function Studio() {
         opacity={shadows.contactOpacity}
         resolution={1024}
         color="#1a1a20"
-        frames={1}
-        smooth={false}
+        frames={Infinity}
       />
     </>
   );
