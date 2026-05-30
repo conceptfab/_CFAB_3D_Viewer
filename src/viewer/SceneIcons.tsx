@@ -51,7 +51,7 @@ function CameraIcon({ id }: { id: string }) {
         <TransformControls
           object={grp}
           mode="translate"
-          size={0.6}
+          size={0.35}
           onMouseDown={() => (dragging.current = true)}
           onMouseUp={() => {
             dragging.current = false;

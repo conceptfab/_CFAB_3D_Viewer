@@ -39,7 +39,7 @@ function LightGizmo() {
         <TransformControls
           object={handle}
           mode="translate"
-          size={0.7}
+          size={0.4}
           onMouseDown={() => (dragging.current = true)}
           onMouseUp={() => (dragging.current = false)}
           onObjectChange={() => setKeyLight({ position: handle.position.toArray() as Vec3 })}

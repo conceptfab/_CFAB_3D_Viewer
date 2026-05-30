@@ -135,7 +135,7 @@ export function Product({ interactive = false }: { interactive?: boolean }) {
         <TransformControls
           object={group}
           mode={mode}
-          size={0.8}
+          size={0.5}
           onMouseDown={() => (dragging.current = true)}
           onMouseUp={() => {
             dragging.current = false;
