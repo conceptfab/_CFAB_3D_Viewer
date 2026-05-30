@@ -111,6 +111,12 @@ interface State {
   modelSize: Vec3;
   cameraApi: CameraApi | null;
 
+  // Stan edytora (NIE część serializowanego configu): widoczność gizmo w widoku.
+  showLightGizmo: boolean;
+  showCameraGizmo: boolean;
+  setShowLightGizmo: (v: boolean) => void;
+  setShowCameraGizmo: (v: boolean) => void;
+
   setEnv: (patch: Partial<SceneConfig['environment']>) => void;
   setBackground: (patch: Partial<SceneConfig['background']>) => void;
   setKeyLight: (patch: Partial<SceneConfig['keyLight']>) => void;
@@ -133,6 +139,11 @@ export const useStore = create<State>((set) => ({
   loadedModel: null,
   modelSize: [1, 1.4, 1],
   cameraApi: null,
+
+  showLightGizmo: true,
+  showCameraGizmo: false,
+  setShowLightGizmo: (showLightGizmo) => set({ showLightGizmo }),
+  setShowCameraGizmo: (showCameraGizmo) => set({ showCameraGizmo }),
 
   setEnv: (patch) =>
     set((s) => ({ config: { ...s.config, environment: { ...s.config.environment, ...patch } } })),

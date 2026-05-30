@@ -16,7 +16,6 @@ export function CameraRig() {
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
   const active = useStore((s) => s.config.camera.active);
-  const presets = useStore((s) => s.config.camera.presets);
   const fov = useStore((s) => s.config.camera.fov);
   const near = useStore((s) => s.config.camera.near);
   const far = useStore((s) => s.config.camera.far);
@@ -56,10 +55,11 @@ export function CameraRig() {
     toTarget: THREE.Vector3;
   } | null>(null);
 
-  // Tween przy zmianie aktywnego presetu (lub po "zapisz widok", które zmienia presets).
+  // Tween TYLKO przy zmianie aktywnego presetu (przyciski kamer). Zapis widoku/gizmo
+  // zmienia presets, ale NIE ma wtedy tweenować — dlatego presets czytamy świeżo.
   useEffect(() => {
     if (!controlsRef.current) return;
-    const view = presets[active];
+    const view = useStore.getState().config.camera.presets[active];
     if (!view) return;
     tween.current = {
       start: performance.now(),
@@ -68,7 +68,7 @@ export function CameraRig() {
       toPos: new THREE.Vector3(...view.position),
       toTarget: new THREE.Vector3(...view.target),
     };
-  }, [active, presets, camera]);
+  }, [active, camera]);
 
   useFrame(() => {
     if (!tween.current || !controlsRef.current) return;

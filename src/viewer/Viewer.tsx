@@ -5,6 +5,7 @@ import { Studio } from './Studio';
 import { Product } from './Product';
 import { CameraRig } from './CameraRig';
 import { Postprocess } from './Postprocess';
+import { Gizmos } from './Gizmos';
 import { DEFAULT_CONFIG } from '../store';
 
 export function Viewer() {
@@ -31,6 +32,7 @@ export function Viewer() {
       </Suspense>
 
       <CameraRig />
+      <Gizmos />
       <Postprocess />
     </Canvas>
   );

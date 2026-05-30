@@ -152,10 +152,41 @@ html, body, #root {
   50% { transform: scale(1); opacity: 1; }
 }
 
-/* --- GLTF Scene Editor: fullscreen renderer + drop-zone --- */
-.viewer {
-  width: 100vw;
+/* --- GLTF Scene Editor: dwupanelowy layout + drop-zone --- */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
   height: 100vh;
+  width: 100vw;
+}
+
+.viewer {
+  height: 100%;
+  min-width: 0;
+}
+
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #14151a;
+  border-left: 1px solid rgba(0, 0, 0, 0.25);
+}
+.editor-panel__title {
+  flex: 0 0 auto;
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #cfd2d8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.editor-panel__body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .dropzone {
