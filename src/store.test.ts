@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { DEFAULT_CONFIG, useStore, replaceStop } from './store';
 
 function reset() {
-  // Przywróć czysty config (deep clone, by testy się nie zazębiały).
   useStore.setState({
     config: structuredClone(DEFAULT_CONFIG),
     loadedModel: null,
@@ -16,10 +15,21 @@ describe('DEFAULT_CONFIG', () => {
     expect(DEFAULT_CONFIG.tone.mode).toBe('NEUTRAL');
   });
 
-  it('ma 5 presetów kamery', () => {
-    expect(Object.keys(DEFAULT_CONFIG.camera.presets).sort()).toEqual(
-      ['detail', 'front', 'hero', 'side', 'top']
-    );
+  it('ma 5 kamer w domyślnej kolejności', () => {
+    expect(DEFAULT_CONFIG.camera.cameras.map((c) => c.id)).toEqual([
+      'hero',
+      'front',
+      'side',
+      'top',
+      'detail',
+    ]);
+  });
+
+  it('każda kamera ma name i showInFinalBar=true', () => {
+    for (const c of DEFAULT_CONFIG.camera.cameras) {
+      expect(typeof c.name).toBe('string');
+      expect(c.showInFinalBar).toBe(true);
+    }
   });
 });
 
@@ -28,7 +38,7 @@ describe('replaceStop', () => {
     const input: [string, string, string, string] = ['a', 'b', 'c', 'd'];
     const out = replaceStop(input, 2, 'X');
     expect(out).toEqual(['a', 'b', 'X', 'd']);
-    expect(input).toEqual(['a', 'b', 'c', 'd']); // brak mutacji
+    expect(input).toEqual(['a', 'b', 'c', 'd']);
     expect(out).not.toBe(input);
   });
 });
@@ -50,26 +60,121 @@ describe('store setters', () => {
     expect(orbit.maxDist).toBe(DEFAULT_CONFIG.camera.orbit.maxDist);
   });
 
-  it('capturePreset nadpisuje wskazany preset', () => {
+  it('setBackground podmienia stops jako nową tablicę', () => {
+    const next: [string, string, string, string] = ['#000', '#111', '#222', '#333'];
+    useStore.getState().setBackground({ stops: next });
+    expect(useStore.getState().config.background.stops).toEqual(next);
+  });
+});
+
+describe('camera operations', () => {
+  beforeEach(reset);
+
+  it('updateCamera(id, patch) aktualizuje wskazaną kamerę po id', () => {
+    useStore.getState().updateCamera('hero', { position: [1, 2, 3], fov: 50 });
+    const hero = useStore.getState().config.camera.cameras.find((c) => c.id === 'hero')!;
+    expect(hero.position).toEqual([1, 2, 3]);
+    expect(hero.fov).toBe(50);
+    expect(hero.target).toEqual(DEFAULT_CONFIG.camera.cameras[0].target);
+  });
+
+  it('renameCamera zmienia name', () => {
+    useStore.getState().renameCamera('hero', 'Bohater');
+    const hero = useStore.getState().config.camera.cameras.find((c) => c.id === 'hero')!;
+    expect(hero.name).toBe('Bohater');
+  });
+
+  it('setCameraVisible przełącza showInFinalBar', () => {
+    useStore.getState().setCameraVisible('hero', false);
+    const hero = useStore.getState().config.camera.cameras.find((c) => c.id === 'hero')!;
+    expect(hero.showInFinalBar).toBe(false);
+  });
+
+  it('moveCamera up przesuwa kamerę o jedno miejsce w górę', () => {
+    useStore.getState().moveCamera('side', 'up');
+    expect(useStore.getState().config.camera.cameras.map((c) => c.id)).toEqual([
+      'hero',
+      'side',
+      'front',
+      'top',
+      'detail',
+    ]);
+  });
+
+  it('moveCamera down przesuwa o jedno w dół', () => {
+    useStore.getState().moveCamera('front', 'down');
+    expect(useStore.getState().config.camera.cameras.map((c) => c.id)).toEqual([
+      'hero',
+      'side',
+      'front',
+      'top',
+      'detail',
+    ]);
+  });
+
+  it('moveCamera na krawędzi nic nie zmienia', () => {
+    useStore.getState().moveCamera('hero', 'up');
+    expect(useStore.getState().config.camera.cameras.map((c) => c.id)).toEqual([
+      'hero',
+      'front',
+      'side',
+      'top',
+      'detail',
+    ]);
+    useStore.getState().moveCamera('detail', 'down');
+    expect(useStore.getState().config.camera.cameras.map((c) => c.id)).toEqual([
+      'hero',
+      'front',
+      'side',
+      'top',
+      'detail',
+    ]);
+  });
+
+  it('addCamera dodaje nową kamerę z unikalnym id i widoczną w finalnym pasku', () => {
+    const before = useStore.getState().config.camera.cameras.length;
+    useStore.getState().addCamera();
+    const after = useStore.getState().config.camera.cameras;
+    expect(after.length).toBe(before + 1);
+    const last = after[after.length - 1];
+    expect(last.id).toMatch(/^cam_/);
+    expect(last.showInFinalBar).toBe(true);
+    expect(typeof last.name).toBe('string');
+  });
+
+  it('removeCamera usuwa kamerę i nie usuwa ostatniej', () => {
+    useStore.getState().removeCamera('hero');
+    expect(useStore.getState().config.camera.cameras.map((c) => c.id)).toEqual([
+      'front',
+      'side',
+      'top',
+      'detail',
+    ]);
+    // usuń aż do jednej
+    useStore.getState().removeCamera('front');
+    useStore.getState().removeCamera('side');
+    useStore.getState().removeCamera('top');
+    expect(useStore.getState().config.camera.cameras.map((c) => c.id)).toEqual(['detail']);
+    // ostatnia — no-op
+    useStore.getState().removeCamera('detail');
+    expect(useStore.getState().config.camera.cameras.map((c) => c.id)).toEqual(['detail']);
+  });
+
+  it('removeCamera aktywnej przełącza active na pierwszą pozostałą', () => {
+    useStore.getState().setCamera({ active: 'side' });
+    useStore.getState().removeCamera('side');
+    expect(useStore.getState().config.camera.active).toBe('hero');
+  });
+
+  it('capturePreset aktualizuje pozycję/target/fov kamery po id', () => {
     useStore.getState().capturePreset('hero', {
       position: [1, 2, 3],
       target: [0, 0, 0],
       fov: 35,
     });
-    expect(useStore.getState().config.camera.presets.hero).toEqual({
-      position: [1, 2, 3],
-      target: [0, 0, 0],
-      fov: 35,
-    });
-    // inne presety nietknięte
-    expect(useStore.getState().config.camera.presets.front).toEqual(
-      DEFAULT_CONFIG.camera.presets.front
-    );
-  });
-
-  it('setBackground podmienia stops jako nową tablicę', () => {
-    const next: [string, string, string, string] = ['#000', '#111', '#222', '#333'];
-    useStore.getState().setBackground({ stops: next });
-    expect(useStore.getState().config.background.stops).toEqual(next);
+    const hero = useStore.getState().config.camera.cameras.find((c) => c.id === 'hero')!;
+    expect(hero.position).toEqual([1, 2, 3]);
+    expect(hero.target).toEqual([0, 0, 0]);
+    expect(hero.fov).toBe(35);
   });
 });

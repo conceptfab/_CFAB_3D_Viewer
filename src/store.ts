@@ -35,6 +35,15 @@ export interface CameraPresetView {
   fov: number;
 }
 
+export interface CameraDef {
+  id: string;
+  name: string;
+  position: Vec3;
+  target: Vec3;
+  fov: number;
+  showInFinalBar: boolean;
+}
+
 export interface SceneConfig {
   environment: { hdriUrl: string; intensity: number };
   background: { stops: [string, string, string, string]; centerY: number };
@@ -64,8 +73,7 @@ export interface SceneConfig {
       damping: number;
     };
     active: string;
-    // Każdy wpis to osobny OBIEKT kamery (własna pozycja/target/fov).
-    presets: Record<string, CameraPresetView>;
+    cameras: CameraDef[];
   };
 }
 
@@ -103,13 +111,13 @@ export const DEFAULT_CONFIG: SceneConfig = {
       damping: 0.08,
     },
     active: 'hero',
-    presets: {
-      hero: { position: [2.4, 1.4, 3.0], target: [0, 0.6, 0], fov: 28 },
-      front: { position: [0, 0.9, 3.2], target: [0, 0.6, 0], fov: 28 },
-      side: { position: [3.2, 0.9, 0.2], target: [0, 0.6, 0], fov: 28 },
-      top: { position: [0.1, 3.6, 0.1], target: [0, 0, 0], fov: 30 },
-      detail: { position: [1.3, 0.7, 1.3], target: [0, 0.6, 0], fov: 45 },
-    },
+    cameras: [
+      { id: 'hero', name: 'Hero', position: [2.4, 1.4, 3.0], target: [0, 0.6, 0], fov: 28, showInFinalBar: true },
+      { id: 'front', name: 'Front', position: [0, 0.9, 3.2], target: [0, 0.6, 0], fov: 28, showInFinalBar: true },
+      { id: 'side', name: 'Side', position: [3.2, 0.9, 0.2], target: [0, 0.6, 0], fov: 28, showInFinalBar: true },
+      { id: 'top', name: 'Top', position: [0.1, 3.6, 0.1], target: [0, 0, 0], fov: 30, showInFinalBar: true },
+      { id: 'detail', name: 'Detail', position: [1.3, 0.7, 1.3], target: [0, 0.6, 0], fov: 45, showInFinalBar: true },
+    ],
   },
 };
 
@@ -160,7 +168,13 @@ interface State {
     patch: Partial<Pick<SceneConfig['camera'], 'near' | 'far' | 'active'>>
   ) => void;
   setOrbit: (patch: Partial<SceneConfig['camera']['orbit']>) => void;
-  capturePreset: (name: string, view: CameraPresetView) => void;
+  capturePreset: (id: string, view: CameraPresetView) => void;
+  updateCamera: (id: string, patch: Partial<Omit<CameraDef, 'id'>>) => void;
+  renameCamera: (id: string, name: string) => void;
+  setCameraVisible: (id: string, visible: boolean) => void;
+  moveCamera: (id: string, dir: 'up' | 'down') => void;
+  addCamera: () => void;
+  removeCamera: (id: string) => void;
 
   setLoadedModel: (model: LoadedModel | null) => void;
   setModelSize: (size: Vec3) => void;
@@ -203,16 +217,101 @@ export const useStore = create<State>((set) => ({
         camera: { ...s.config.camera, orbit: { ...s.config.camera.orbit, ...patch } },
       },
     })),
-  capturePreset: (name, view) =>
+  capturePreset: (id, view) =>
     set((s) => ({
       config: {
         ...s.config,
         camera: {
           ...s.config.camera,
-          presets: { ...s.config.camera.presets, [name]: view },
+          cameras: s.config.camera.cameras.map((c) =>
+            c.id === id ? { ...c, position: view.position, target: view.target, fov: view.fov } : c
+          ),
         },
       },
     })),
+
+  updateCamera: (id, patch) =>
+    set((s) => ({
+      config: {
+        ...s.config,
+        camera: {
+          ...s.config.camera,
+          cameras: s.config.camera.cameras.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+        },
+      },
+    })),
+
+  renameCamera: (id, name) =>
+    set((s) => ({
+      config: {
+        ...s.config,
+        camera: {
+          ...s.config.camera,
+          cameras: s.config.camera.cameras.map((c) => (c.id === id ? { ...c, name } : c)),
+        },
+      },
+    })),
+
+  setCameraVisible: (id, visible) =>
+    set((s) => ({
+      config: {
+        ...s.config,
+        camera: {
+          ...s.config.camera,
+          cameras: s.config.camera.cameras.map((c) =>
+            c.id === id ? { ...c, showInFinalBar: visible } : c
+          ),
+        },
+      },
+    })),
+
+  moveCamera: (id, dir) =>
+    set((s) => {
+      const arr = s.config.camera.cameras;
+      const idx = arr.findIndex((c) => c.id === id);
+      if (idx < 0) return s;
+      const target = dir === 'up' ? idx - 1 : idx + 1;
+      if (target < 0 || target >= arr.length) return s;
+      const next = arr.slice();
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return {
+        config: { ...s.config, camera: { ...s.config.camera, cameras: next } },
+      };
+    }),
+
+  addCamera: () =>
+    set((s) => {
+      // unikalne id
+      let n = s.config.camera.cameras.length + 1;
+      const taken = new Set(s.config.camera.cameras.map((c) => c.id));
+      while (taken.has(`cam_${n}`)) n++;
+      const id = `cam_${n}`;
+      const newCam: CameraDef = {
+        id,
+        name: `Kamera ${n}`,
+        position: [2.4, 1.4, 3.0],
+        target: [0, 0.6, 0],
+        fov: 35,
+        showInFinalBar: true,
+      };
+      return {
+        config: {
+          ...s.config,
+          camera: { ...s.config.camera, cameras: [...s.config.camera.cameras, newCam] },
+        },
+      };
+    }),
+
+  removeCamera: (id) =>
+    set((s) => {
+      const arr = s.config.camera.cameras;
+      if (arr.length <= 1) return s;
+      const next = arr.filter((c) => c.id !== id);
+      const active = s.config.camera.active === id ? next[0].id : s.config.camera.active;
+      return {
+        config: { ...s.config, camera: { ...s.config.camera, active, cameras: next } },
+      };
+    }),
 
   setLoadedModel: (loadedModel) => set({ loadedModel }),
   setModelSize: (modelSize) => set({ modelSize }),
