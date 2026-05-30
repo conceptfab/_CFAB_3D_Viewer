@@ -46,33 +46,40 @@ html, body, #root {
 .hud b { color: var(--accent); }
 .hud span { opacity: 0.5; }
 
-.camera-buttons {
+/* Wspólny pasek narzędziowy viewportów (kamery + rzuty) — jeden spójny styl. */
+.viewport-bar {
   position: absolute;
-  bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  padding: 6px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  backdrop-filter: blur(10px);
   z-index: 10;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px;
+  background: rgba(20, 21, 26, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
 }
-.camera-buttons button {
+.viewport-bar--bottom { bottom: 12px; }
+.viewport-bar button {
   appearance: none;
   border: 0;
   background: transparent;
-  padding: 6px 14px;
-  border-radius: 999px;
+  padding: 5px 10px;
+  border-radius: 7px;
   font: inherit;
+  font-size: 12px;
   cursor: pointer;
-  color: var(--ink);
+  color: #cfd2d8;
+  white-space: nowrap;
+  text-transform: capitalize;
   transition: background 120ms;
 }
-.camera-buttons button:hover { background: rgba(0, 0, 0, 0.05); }
-.camera-buttons button.active { background: var(--ink); color: #fff; }
+.viewport-bar button:hover { background: rgba(255, 255, 255, 0.08); }
+.viewport-bar button.active { background: #ffcc33; color: #1c1917; }
 
 .sidebar {
   background: #fff;
@@ -179,38 +186,6 @@ html, body, #root {
 }
 .hud--editor b { color: #ffcc33; }
 
-.view-buttons {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
-  gap: 4px;
-  padding: 5px;
-  background: rgba(20, 21, 26, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  backdrop-filter: blur(8px);
-  white-space: nowrap;
-}
-.view-buttons button { white-space: nowrap; }
-.view-buttons button {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 5px 10px;
-  border-radius: 7px;
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  color: #cfd2d8;
-  transition: background 120ms;
-}
-.view-buttons button:hover { background: rgba(255, 255, 255, 0.08); }
-.view-buttons button.active { background: #ffcc33; color: #1c1917; }
 
 .editor-panel {
   display: flex;

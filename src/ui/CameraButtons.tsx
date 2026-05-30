@@ -1,26 +1,23 @@
 import { useStore } from '../store';
 
-const CAMERA_LABELS: { id: string; label: string }[] = [
-  { id: 'hero', label: 'Hero' },
-  { id: 'front', label: 'Front' },
-  { id: 'side', label: 'Bok' },
-  { id: 'top', label: 'Góra' },
-  { id: 'detail', label: 'Detal' },
-];
-
-/** Predefiniowane ujęcia kamery — overlay w głównym oknie renderera. */
+/**
+ * Predefiniowane ujęcia kamery — overlay w głównym oknie renderera.
+ * Etykiety pochodzą wprost z nazw kamer w storze, więc są spójne z outlinerem.
+ */
 export function CameraButtons() {
+  const presets = useStore((s) => s.config.camera.presets);
   const active = useStore((s) => s.config.camera.active);
   const setCamera = useStore((s) => s.setCamera);
+  const ids = Object.keys(presets);
   return (
-    <div className="camera-buttons">
-      {CAMERA_LABELS.map((c) => (
+    <div className="viewport-bar viewport-bar--bottom">
+      {ids.map((id) => (
         <button
-          key={c.id}
-          className={active === c.id ? 'active' : ''}
-          onClick={() => setCamera({ active: c.id })}
+          key={id}
+          className={active === id ? 'active' : ''}
+          onClick={() => setCamera({ active: id })}
         >
-          {c.label}
+          {id}
         </button>
       ))}
     </div>

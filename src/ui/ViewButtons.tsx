@@ -16,7 +16,7 @@ export function ViewButtons() {
   const view = useStore((s) => s.editorView);
   const setEditorView = useStore((s) => s.setEditorView);
   return (
-    <div className="view-buttons">
+    <div className="viewport-bar viewport-bar--bottom">
       {VIEWS.map((v) => (
         <button
           key={v.id}
