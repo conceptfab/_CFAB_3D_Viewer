@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { Environment, SoftShadows, ContactShadows } from '@react-three/drei';
+import { Environment, SoftShadows } from '@react-three/drei';
 import { useStore } from '../store';
 
 /** Radialny gradient tła z 4 edytowalnych stopni koloru. */
@@ -40,10 +40,7 @@ export function Studio() {
   );
 
   const sphereR = 0.5 * Math.hypot(sx, sy, sz);
-  const footprint = Math.max(sx, sz);
   const frustum = Math.max(sphereR * 1.6 + sy, 2.5);
-  const aoScale = Math.max(footprint * 1.5, 1.8);
-  const aoFar = Math.max(sy * 0.5, 0.4);
 
   return (
     <>
@@ -78,17 +75,9 @@ export function Studio() {
         <shadowMaterial transparent opacity={shadows.catcherOpacity} color="#000000" />
       </mesh>
 
-      <ContactShadows
-        position={[0, 0.0015, 0]}
-        scale={aoScale}
-        blur={shadows.contactBlur}
-        far={aoFar}
-        opacity={shadows.contactOpacity}
-        resolution={1024}
-        color="#1a1a20"
-        frames={Infinity}
-        smooth={false}
-      />
+      {/* ContactShadows świadomie usunięte: drei accumulates do tego samego
+          render-targetu i przy ruszającym się obiekcie zostawia ghost trail.
+          PCSS shadow z directional lighta na shadow-catcher plane wystarcza. */}
     </>
   );
 }
