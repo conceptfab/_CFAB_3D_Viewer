@@ -111,7 +111,8 @@ export async function requireUser(): Promise<User> {
     const { redirect } = await import('next/navigation');
     redirect('/login');
   }
-  return user;
+  // redirect() above throws, so user is non-null here
+  return user!;
 }
 
 /**
