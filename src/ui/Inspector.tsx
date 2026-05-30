@@ -344,7 +344,9 @@ export function Inspector() {
       {selected === 'actor' && <ActorNote />}
       {selected === 'light' && <LightControls />}
       {camId && <CameraControls key={camId} id={camId} />}
-      <Leva fill flat titleBar={false} />
+      <div className="inspector__panel">
+        <Leva fill flat titleBar={false} />
+      </div>
     </div>
   );
 }
