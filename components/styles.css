@@ -197,6 +197,9 @@ html, body, #root {
 }
 .editor-panel__title {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 12px 14px;
   font-size: 11px;
   font-weight: 600;
@@ -385,3 +388,113 @@ html, body, #root {
   bottom: auto;
   transform: none;
 }
+
+/* --- Save Scene button in editor-panel header --- */
+.save-scene-btn {
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #1c1917;
+  background: #ffcc33;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.save-scene-btn:hover { background: #f5c200; }
+
+/* --- Save Scene dialog overlay --- */
+.save-scene-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-scene-modal {
+  background: #1e2028;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 28px 32px;
+  min-width: 360px;
+  max-width: 480px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: #d6d9df;
+}
+
+.save-scene-modal h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #eceef2;
+}
+
+.save-scene-modal label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #a0a4ae;
+  letter-spacing: 0.3px;
+}
+
+.save-scene-modal input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  background: #12141a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #eceef2;
+  outline: none;
+  box-sizing: border-box;
+}
+.save-scene-modal input[type="text"]:focus {
+  border-color: #2a8a66;
+}
+
+.save-scene-warning {
+  font-size: 12px;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 0;
+}
+
+.save-scene-error {
+  font-size: 12px;
+  color: #f87171;
+  margin: 0;
+}
+
+.save-scene-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.save-scene-actions button {
+  padding: 7px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d6d9df;
+}
+.save-scene-actions button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.14); }
+.save-scene-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.save-scene-actions .save-scene-primary {
+  background: #2a8a66;
+  color: #fff;
+}
+.save-scene-actions .save-scene-primary:hover:not(:disabled) { background: #238056; }
