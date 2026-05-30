@@ -5,7 +5,7 @@ import {
   replaceStop,
   type ToneMode,
   type GizmoMode,
-  type CameraPresetView,
+  type Vec3,
 } from '../store';
 import { MODEL_CATALOG } from '../models/catalog';
 
@@ -139,17 +139,13 @@ function LightControls() {
 }
 
 /* --- Pojedyncza kamera (obiekt) --- */
-function patchCamera(id: string, patch: Partial<CameraPresetView>) {
-  const cur = useStore.getState().config.camera.presets[id];
-  if (!cur) return;
-  useStore.getState().capturePreset(id, { ...cur, ...patch });
-}
 function CameraControls({ id }: { id: string }) {
   const c = useStore.getState().config.camera;
-  const cam = c.presets[id];
+  const cam = c.cameras.find((x) => x.id === id);
   if (!cam) return null;
   return <CameraControlsInner id={id} active={c.active === id} cam={cam} orbit={c.orbit} />;
 }
+
 function CameraControlsInner({
   id,
   active,
@@ -158,35 +154,94 @@ function CameraControlsInner({
 }: {
   id: string;
   active: boolean;
-  cam: CameraPresetView;
+  cam: { position: Vec3; target: Vec3; fov: number; name: string; showInFinalBar: boolean };
   orbit: { minDist: number; maxDist: number; damping: number };
 }) {
-  const [, set] = useControls(`Camera: ${id}`, () => ({
-    aktywna: {
-      value: active,
-      onChange: (v: boolean) => {
-        if (v) useStore.getState().setCamera({ active: id });
-      },
-    },
-    pozycja: { value: cam.position, step: 0.05, onChange: (v: [number, number, number]) => patchCamera(id, { position: v }) },
-    target: { value: cam.target, step: 0.05, onChange: (v: [number, number, number]) => patchCamera(id, { target: v }) },
-    fov: { value: cam.fov, min: 10, max: 80, step: 1, onChange: (v: number) => patchCamera(id, { fov: v }) },
-    minDist: { value: orbit.minDist, min: 0.2, max: 5, step: 0.1, onChange: (v: number) => useStore.getState().setOrbit({ minDist: v }) },
-    maxDist: { value: orbit.maxDist, min: 2, max: 30, step: 0.5, onChange: (v: number) => useStore.getState().setOrbit({ maxDist: v }) },
-    damping: { value: orbit.damping, min: 0, max: 0.3, step: 0.01, onChange: (v: number) => useStore.getState().setOrbit({ damping: v }) },
-    'Zapisz z aktualnego widoku': button(() => {
-      const view = useStore.getState().cameraApi?.getView();
-      if (view) useStore.getState().capturePreset(id, view);
-    }),
-  }), []);
+  const removable = useStore.getState().config.camera.cameras.length > 1;
 
-  // Store → leva (gizmo kamery / zapis widoku aktualizuje pola).
+  const [, set] = useControls(
+    `Camera: ${id}`,
+    () => ({
+      nazwa: {
+        value: cam.name,
+        onChange: (v: string) => useStore.getState().renameCamera(id, v),
+      },
+      'pokaż w finalnym widoku': {
+        value: cam.showInFinalBar,
+        onChange: (v: boolean) => useStore.getState().setCameraVisible(id, v),
+      },
+      aktywna: {
+        value: active,
+        onChange: (v: boolean) => {
+          if (v) useStore.getState().setCamera({ active: id });
+        },
+      },
+      pozycja: {
+        value: cam.position,
+        step: 0.05,
+        onChange: (v: [number, number, number]) =>
+          useStore.getState().updateCamera(id, { position: v }),
+      },
+      target: {
+        value: cam.target,
+        step: 0.05,
+        onChange: (v: [number, number, number]) =>
+          useStore.getState().updateCamera(id, { target: v }),
+      },
+      fov: {
+        value: cam.fov,
+        min: 10,
+        max: 80,
+        step: 1,
+        onChange: (v: number) => useStore.getState().updateCamera(id, { fov: v }),
+      },
+      minDist: {
+        value: orbit.minDist,
+        min: 0.2,
+        max: 5,
+        step: 0.1,
+        onChange: (v: number) => useStore.getState().setOrbit({ minDist: v }),
+      },
+      maxDist: {
+        value: orbit.maxDist,
+        min: 2,
+        max: 30,
+        step: 0.5,
+        onChange: (v: number) => useStore.getState().setOrbit({ maxDist: v }),
+      },
+      damping: {
+        value: orbit.damping,
+        min: 0,
+        max: 0.3,
+        step: 0.01,
+        onChange: (v: number) => useStore.getState().setOrbit({ damping: v }),
+      },
+      'Zapisz z aktualnego widoku': button(() => {
+        const view = useStore.getState().cameraApi?.getView();
+        if (view) useStore.getState().capturePreset(id, view);
+      }),
+      'Usuń kamerę': button(
+        () => useStore.getState().removeCamera(id),
+        { disabled: !removable }
+      ),
+    }),
+    []
+  );
+
+  // Store → leva (gizmo / zapis widoku / rename z outlinera).
   useEffect(
     () =>
       useStore.subscribe((s, prev) => {
-        const c = s.config.camera.presets[id];
-        if (!c || c === prev.config.camera.presets[id]) return;
-        set({ pozycja: c.position, target: c.target, fov: c.fov });
+        const cur = s.config.camera.cameras.find((x) => x.id === id);
+        const old = prev.config.camera.cameras.find((x) => x.id === id);
+        if (!cur || cur === old) return;
+        set({
+          nazwa: cur.name,
+          'pokaż w finalnym widoku': cur.showInFinalBar,
+          pozycja: cur.position,
+          target: cur.target,
+          fov: cur.fov,
+        });
       }),
     [id, set]
   );
