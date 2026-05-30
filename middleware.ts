@@ -11,7 +11,9 @@ export function middleware(request: NextRequest) {
   // Sprawdź czy ścieżka jest chroniona (exact match lub prefix dla /api/admin/*)
   const isProtected =
     PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/')) ||
-    pathname.startsWith('/api/admin/');
+    pathname.startsWith('/api/admin/') ||
+    pathname.startsWith('/api/scenes') ||
+    pathname.startsWith('/api/blob/');
 
   if (!isProtected) {
     return NextResponse.next();

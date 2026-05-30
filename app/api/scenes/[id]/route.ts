@@ -77,6 +77,10 @@ export async function PATCH(request: Request, ctx: Ctx): Promise<NextResponse> {
     ...(parsed.data.thumbBlobUrl !== undefined && { thumbBlobUrl: parsed.data.thumbBlobUrl }),
   });
 
+  if (!updated) {
+    // Wyścig: scena usunięta między getScene a updateScene.
+    return NextResponse.json({ error: 'Nie znaleziono sceny' }, { status: 404 });
+  }
   return NextResponse.json(updated);
 }
 
