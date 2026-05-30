@@ -162,7 +162,7 @@ function HeroControls() {
       onChange: (url: string) => {
         if (useStore.getState().loadedModel?.objectUrl === url) return;
         const label = Object.keys(MODEL_OPTIONS).find((k) => MODEL_OPTIONS[k] === url) ?? 'model';
-        useStore.getState().setLoadedModel({ objectUrl: url, fileName: label });
+        useStore.getState().setLoadedModel({ objectUrl: url, fileName: label, file: null });
       },
     },
     'Wczytaj plik (.glb)': button(() => (window as any).__openModelPicker?.()),
