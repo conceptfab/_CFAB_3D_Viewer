@@ -4,9 +4,11 @@ import { db } from '@/lib/db';
 import { sessions, users } from '@/lib/db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 import type { User, Role, UserStatus } from '@/lib/types';
+import { SESSION_COOKIE } from './cookie-name';
 
-// Nazwa cookie sesji (spójna z kontraktem).
-export const SESSION_COOKIE = 'cfab_session';
+// Re-eksport nazwy cookie. Źródło: cookie-name.ts (bezzależnościowe — importowane
+// też przez edge middleware, które nie może ciągnąć crypto/@/lib/db).
+export { SESSION_COOKIE };
 // Czas życia sesji: 7 dni (sztywne — bez sliding expiration).
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
