@@ -16,36 +16,34 @@ export function CameraRig() {
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
   const active = useStore((s) => s.config.camera.active);
-  const fov = useStore((s) => s.config.camera.fov);
+  const presets = useStore((s) => s.config.camera.presets);
   const near = useStore((s) => s.config.camera.near);
   const far = useStore((s) => s.config.camera.far);
   const orbit = useStore((s) => s.config.camera.orbit);
   const registerCameraApi = useStore((s) => s.registerCameraApi);
 
-  // Imperatywny dostęp do aktualnego widoku — używany przez przycisk "zapisz widok".
+  // Imperatywny dostęp do aktualnego widoku (z fov) — dla "zapisz widok".
   useEffect(() => {
     registerCameraApi({
       getView: () => ({
         position: [camera.position.x, camera.position.y, camera.position.z],
         target: controlsRef.current
-          ? [
-              controlsRef.current.target.x,
-              controlsRef.current.target.y,
-              controlsRef.current.target.z,
-            ]
+          ? [controlsRef.current.target.x, controlsRef.current.target.y, controlsRef.current.target.z]
           : [0, 0, 0],
+        fov: camera.fov,
       }),
     });
     return () => registerCameraApi(null);
   }, [camera, registerCameraApi]);
 
-  // Live fov / near / far.
+  // Live fov (z aktywnej kamery) / near / far.
+  const activeFov = presets[active]?.fov ?? 28;
   useEffect(() => {
-    camera.fov = fov;
+    camera.fov = activeFov;
     camera.near = near;
     camera.far = far;
     camera.updateProjectionMatrix();
-  }, [camera, fov, near, far]);
+  }, [camera, activeFov, near, far]);
 
   const tween = useRef<{
     start: number;
@@ -55,8 +53,7 @@ export function CameraRig() {
     toTarget: THREE.Vector3;
   } | null>(null);
 
-  // Tween TYLKO przy zmianie aktywnego presetu (przyciski kamer). Zapis widoku/gizmo
-  // zmienia presets, ale NIE ma wtedy tweenować — dlatego presets czytamy świeżo.
+  // Tween przy zmianie aktywnej kamery (presety czytamy świeżo, by zapis/gizmo nie tweenował).
   useEffect(() => {
     if (!controlsRef.current) return;
     const view = useStore.getState().config.camera.presets[active];
@@ -75,11 +72,7 @@ export function CameraRig() {
     const t = Math.min(1, (performance.now() - tween.current.start) / TWEEN_MS);
     const eased = easeInOutCubic(t);
     camera.position.lerpVectors(tween.current.fromPos, tween.current.toPos, eased);
-    controlsRef.current.target.lerpVectors(
-      tween.current.fromTarget,
-      tween.current.toTarget,
-      eased
-    );
+    controlsRef.current.target.lerpVectors(tween.current.fromTarget, tween.current.toTarget, eased);
     controlsRef.current.update();
     if (t >= 1) tween.current = null;
   });

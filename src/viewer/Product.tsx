@@ -122,6 +122,12 @@ export function Product({ interactive = false }: { interactive?: boolean }) {
           setSelected('hero');
         }}
       >
+        {interactive && (
+          <mesh>
+            <octahedronGeometry args={[0.08]} />
+            <meshBasicMaterial color="#cfd2d8" wireframe toneMapped={false} />
+          </mesh>
+        )}
         {loadedModel && <Actor key={loadedModel.objectUrl} url={loadedModel.objectUrl} />}
       </group>
 

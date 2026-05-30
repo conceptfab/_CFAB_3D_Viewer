@@ -54,10 +54,12 @@ describe('store setters', () => {
     useStore.getState().capturePreset('hero', {
       position: [1, 2, 3],
       target: [0, 0, 0],
+      fov: 35,
     });
     expect(useStore.getState().config.camera.presets.hero).toEqual({
       position: [1, 2, 3],
       target: [0, 0, 0],
+      fov: 35,
     });
     // inne presety nietknięte
     expect(useStore.getState().config.camera.presets.front).toEqual(

@@ -1,14 +1,16 @@
-import { useStore, type SceneElementId } from '../store';
+import { useStore } from '../store';
 
 type Row =
   | { kind: 'section'; label: string }
-  | { kind: 'item'; id: SceneElementId; label: string; icon: string; depth: number; hint?: string };
+  | { kind: 'item'; id: string; label: string; icon: string; depth: number; hint?: string };
 
 /** Drzewo elementów sceny (jak outliner w C4D / Blenderze). */
 export function Outliner() {
   const selected = useStore((s) => s.selected);
   const setSelected = useStore((s) => s.setSelected);
   const fileName = useStore((s) => s.loadedModel?.fileName);
+  const cameras = useStore((s) => s.config.camera.presets);
+  const activeCam = useStore((s) => s.config.camera.active);
 
   const rows: Row[] = [
     { kind: 'section', label: 'Świat' },
@@ -23,12 +25,21 @@ export function Outliner() {
   if (fileName) {
     rows.push({ kind: 'item', id: 'actor', label: fileName, icon: '🔒', depth: 1, hint: 'aktor' });
   }
-  rows.push(
-    { kind: 'section', label: 'Światła' },
-    { kind: 'item', id: 'light', label: 'Key Light', icon: '💡', depth: 1 },
-    { kind: 'section', label: 'Kamery' },
-    { kind: 'item', id: 'camera', label: 'Camera', icon: '📷', depth: 1 }
-  );
+
+  rows.push({ kind: 'section', label: 'Światła' });
+  rows.push({ kind: 'item', id: 'light', label: 'Key Light', icon: '💡', depth: 1 });
+
+  rows.push({ kind: 'section', label: 'Kamery' });
+  for (const id of Object.keys(cameras)) {
+    rows.push({
+      kind: 'item',
+      id: `cam:${id}`,
+      label: id,
+      icon: '📷',
+      depth: 1,
+      hint: id === activeCam ? 'aktywna' : undefined,
+    });
+  }
 
   return (
     <div className="outliner">

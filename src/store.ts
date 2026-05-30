@@ -32,6 +32,7 @@ export type Vec3 = [number, number, number];
 export interface CameraPresetView {
   position: Vec3;
   target: Vec3;
+  fov: number;
 }
 
 export interface SceneConfig {
@@ -53,7 +54,6 @@ export interface SceneConfig {
   // bezpośrednio; przesuwamy/rotujemy/skalujemy ten null.
   hero: { position: Vec3; rotation: Vec3; scale: Vec3 };
   camera: {
-    fov: number;
     near: number;
     far: number;
     orbit: {
@@ -64,6 +64,7 @@ export interface SceneConfig {
       damping: number;
     };
     active: string;
+    // Każdy wpis to osobny OBIEKT kamery (własna pozycja/target/fov).
     presets: Record<string, CameraPresetView>;
   };
 }
@@ -92,7 +93,6 @@ export const DEFAULT_CONFIG: SceneConfig = {
   material: { envMapIntensity: 1.0 },
   hero: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
   camera: {
-    fov: 28,
     near: 0.05,
     far: 80,
     orbit: {
@@ -104,11 +104,11 @@ export const DEFAULT_CONFIG: SceneConfig = {
     },
     active: 'hero',
     presets: {
-      hero: { position: [2.4, 1.4, 3.0], target: [0, 0.6, 0] },
-      front: { position: [0, 0.9, 3.2], target: [0, 0.6, 0] },
-      side: { position: [3.2, 0.9, 0.2], target: [0, 0.6, 0] },
-      top: { position: [0.1, 3.6, 0.1], target: [0, 0, 0] },
-      detail: { position: [1.3, 0.7, 1.3], target: [0, 0.6, 0] },
+      hero: { position: [2.4, 1.4, 3.0], target: [0, 0.6, 0], fov: 28 },
+      front: { position: [0, 0.9, 3.2], target: [0, 0.6, 0], fov: 28 },
+      side: { position: [3.2, 0.9, 0.2], target: [0, 0.6, 0], fov: 28 },
+      top: { position: [0.1, 3.6, 0.1], target: [0, 0, 0], fov: 30 },
+      detail: { position: [1.3, 0.7, 1.3], target: [0, 0.6, 0], fov: 45 },
     },
   },
 };
@@ -143,8 +143,9 @@ interface State {
   // Stan edytora (NIE część serializowanego configu).
   editorView: EditorView;
   setEditorView: (v: EditorView) => void;
-  selected: SceneElementId;
-  setSelected: (id: SceneElementId) => void;
+  // 'scene' | 'render' | ... | 'hero' | 'actor' | 'light' | 'cam:<id>'
+  selected: string;
+  setSelected: (id: string) => void;
   gizmoMode: GizmoMode;
   setGizmoMode: (m: GizmoMode) => void;
 
@@ -156,7 +157,7 @@ interface State {
   setMaterial: (patch: Partial<SceneConfig['material']>) => void;
   setHero: (patch: Partial<SceneConfig['hero']>) => void;
   setCamera: (
-    patch: Partial<Pick<SceneConfig['camera'], 'fov' | 'near' | 'far' | 'active'>>
+    patch: Partial<Pick<SceneConfig['camera'], 'near' | 'far' | 'active'>>
   ) => void;
   setOrbit: (patch: Partial<SceneConfig['camera']['orbit']>) => void;
   capturePreset: (name: string, view: CameraPresetView) => void;

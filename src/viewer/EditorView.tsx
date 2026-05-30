@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
 import { Product } from './Product';
 import { Gizmos } from './Gizmos';
+import { SceneIcons } from './SceneIcons';
 import { useStore, type EditorView as EditorViewId, type Vec3 } from '../store';
 
 /** Kierunki kamery dla rzutów ortograficznych (od strony osi w stronę środka). */
@@ -48,7 +49,7 @@ function EditorRig({ view }: { view: EditorViewId }) {
       <>
         <PerspectiveCamera
           makeDefault
-          fov={cam.fov}
+          fov={p.fov}
           near={cam.near}
           far={cam.far}
           position={p.position}
@@ -111,6 +112,7 @@ export function EditorView() {
 
       <EditorRig key={view} view={view} />
       <Gizmos />
+      <SceneIcons />
     </Canvas>
   );
 }
