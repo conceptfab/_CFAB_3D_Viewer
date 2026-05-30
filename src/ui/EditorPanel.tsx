@@ -51,10 +51,6 @@ export function EditorPanel() {
         step: 0.01,
         onChange: (v: number) => useStore.getState().setOrbit({ damping: v }),
       },
-      'gizmo celu (przeciągnij w widoku)': {
-        value: false,
-        onChange: (v: boolean) => useStore.getState().setShowCameraGizmo(v),
-      },
       'Zapisz z aktualnego widoku': button(() => {
         const st = useStore.getState();
         const view = st.cameraApi?.getView();

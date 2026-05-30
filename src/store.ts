@@ -2,6 +2,17 @@ import { create } from 'zustand';
 
 export type ToneMode = 'NEUTRAL' | 'ACES_FILMIC' | 'AGX' | 'REINHARD';
 
+/** Rzuty uproszczonego viewportu edycyjnego (środkowy panel). */
+export type EditorView =
+  | 'top'
+  | 'bottom'
+  | 'front'
+  | 'back'
+  | 'left'
+  | 'right'
+  | 'perspective'
+  | 'camera';
+
 export type Vec3 = [number, number, number];
 
 export interface CameraPresetView {
@@ -111,11 +122,11 @@ interface State {
   modelSize: Vec3;
   cameraApi: CameraApi | null;
 
-  // Stan edytora (NIE część serializowanego configu): widoczność gizmo w widoku.
+  // Stan edytora (NIE część serializowanego configu).
+  editorView: EditorView;
+  setEditorView: (v: EditorView) => void;
   showLightGizmo: boolean;
-  showCameraGizmo: boolean;
   setShowLightGizmo: (v: boolean) => void;
-  setShowCameraGizmo: (v: boolean) => void;
 
   setEnv: (patch: Partial<SceneConfig['environment']>) => void;
   setBackground: (patch: Partial<SceneConfig['background']>) => void;
@@ -140,10 +151,10 @@ export const useStore = create<State>((set) => ({
   modelSize: [1, 1.4, 1],
   cameraApi: null,
 
+  editorView: 'perspective',
+  setEditorView: (editorView) => set({ editorView }),
   showLightGizmo: true,
-  showCameraGizmo: false,
   setShowLightGizmo: (showLightGizmo) => set({ showLightGizmo }),
-  setShowCameraGizmo: (showCameraGizmo) => set({ showCameraGizmo }),
 
   setEnv: (patch) =>
     set((s) => ({ config: { ...s.config, environment: { ...s.config.environment, ...patch } } })),
