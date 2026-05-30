@@ -23,9 +23,6 @@ export default function App() {
 
       {/* 2. Uproszczony viewport edycyjny (przełączane rzuty) */}
       <section className="editor-viewport">
-        <div className="hud hud--editor">
-          <b>Edycja</b> <span>· drag = orbit · scroll = zoom</span>
-        </div>
         <ViewButtons />
         <EditorView />
       </section>
