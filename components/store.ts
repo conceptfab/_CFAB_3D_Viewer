@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { WebGLRenderer } from 'three';
 
 export type ToneMode = 'NEUTRAL' | 'ACES_FILMIC' | 'AGX' | 'REINHARD';
 
@@ -165,6 +166,9 @@ export function replaceStop(
 export interface LoadedModel {
   objectUrl: string;
   fileName: string;
+  /** Oryginalny obiekt File — potrzebny do uploadu przy zapisie sceny.
+   *  null gdy model załadowany z Blob URL (otwieranie istniejącej sceny). */
+  file: File | null;
 }
 
 /** Imperatywny dostęp do aktualnego widoku kamery (rejestrowany przez CameraRig). */
@@ -210,6 +214,10 @@ interface State {
   setLoadedModel: (model: LoadedModel | null) => void;
   setModelSize: (size: Vec3) => void;
   registerCameraApi: (api: CameraApi | null) => void;
+
+  /** Referencja do WebGLRenderer dla captureThumbnail (poza drzewem Canvas). */
+  glRef: { domElement: HTMLCanvasElement } | null;
+  setGlRef: (gl: { domElement: HTMLCanvasElement } | null) => void;
 }
 
 export const useStore = create<State>((set) => ({
@@ -217,6 +225,7 @@ export const useStore = create<State>((set) => ({
   loadedModel: null,
   modelSize: [1, 1.4, 1],
   cameraApi: null,
+  glRef: null,
 
   editorView: 'perspective',
   setEditorView: (editorView) => set({ editorView }),
@@ -350,4 +359,6 @@ export const useStore = create<State>((set) => ({
   setLoadedModel: (loadedModel) => set({ loadedModel }),
   setModelSize: (modelSize) => set({ modelSize }),
   registerCameraApi: (cameraApi) => set({ cameraApi }),
+
+  setGlRef: (glRef) => set({ glRef }),
 }));

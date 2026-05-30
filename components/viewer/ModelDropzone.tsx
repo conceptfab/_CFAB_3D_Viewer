@@ -26,7 +26,7 @@ export function ModelDropzone() {
       if (prevUrl.current) URL.revokeObjectURL(prevUrl.current);
       const objectUrl = URL.createObjectURL(file);
       prevUrl.current = objectUrl;
-      setLoadedModel({ objectUrl, fileName: file.name });
+      setLoadedModel({ objectUrl, fileName: file.name, file });
     },
     [setLoadedModel]
   );
