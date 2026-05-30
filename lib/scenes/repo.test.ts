@@ -35,6 +35,10 @@ const mockSceneRecord: SceneRecord = {
   updatedAt: new Date('2026-01-01'),
 };
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe('createScene', () => {
   it('zwraca SceneRecord po zapisaniu', async () => {
     const { db } = await import('@/lib/db');
@@ -142,8 +146,10 @@ describe('deleteScene', () => {
 
     await deleteScene(MOCK_SCENE_ID);
 
-    // del wywołany dwukrotnie: thumb + model
+    // del wywołany dwukrotnie: thumb + model — z właściwymi URL-ami
     expect(del).toHaveBeenCalledTimes(2);
+    expect(del).toHaveBeenCalledWith(mockSceneRecord.thumbBlobUrl);
+    expect(del).toHaveBeenCalledWith(mockSceneRecord.modelBlobUrl);
   });
 
   it('kasuje tylko miniaturę gdy model współdzielony', async () => {
