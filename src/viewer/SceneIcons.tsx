@@ -3,9 +3,8 @@ import { TransformControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore, type Vec3 } from '../store';
 
-/** Ikona 3D pojedynczej kamery: korpus + obiektyw skierowany na target. */
 function CameraIcon({ id }: { id: string }) {
-  const cam = useStore((s) => s.config.camera.presets[id]);
+  const cam = useStore((s) => s.config.camera.cameras.find((c) => c.id === id));
   const active = useStore((s) => s.config.camera.active) === id;
   const selected = useStore((s) => s.selected) === `cam:${id}`;
   const setSelected = useStore((s) => s.setSelected);
@@ -23,9 +22,13 @@ function CameraIcon({ id }: { id: string }) {
 
   const writeBack = () => {
     if (!grp) return;
-    const cur = useStore.getState().config.camera.presets[id];
+    const cur = useStore.getState().config.camera.cameras.find((c) => c.id === id);
     if (!cur) return;
-    useStore.getState().capturePreset(id, { ...cur, position: grp.position.toArray() as Vec3 });
+    useStore.getState().capturePreset(id, {
+      position: grp.position.toArray() as Vec3,
+      target: cur.target,
+      fov: cur.fov,
+    });
   };
 
   return (
@@ -64,16 +67,14 @@ function CameraIcon({ id }: { id: string }) {
   );
 }
 
-/** Ikony 3D wszystkich kamer sceny (jeden obiekt na kamerę). */
 export function SceneIcons() {
-  // Wybieramy stabilną referencję presetów; Object.keys liczymy poza selektorem,
-  // inaczej selektor zwracałby nową tablicę co render → pętla useSyncExternalStore.
-  const presets = useStore((s) => s.config.camera.presets);
-  const ids = Object.keys(presets);
+  // Stabilna ref na tablicę — selektor nie liczy Object.keys, więc nie wytwarza
+  // nowego obiektu co render (vide ticket o pętli useSyncExternalStore).
+  const cameras = useStore((s) => s.config.camera.cameras);
   return (
     <>
-      {ids.map((id) => (
-        <CameraIcon key={id} id={id} />
+      {cameras.map((c) => (
+        <CameraIcon key={c.id} id={c.id} />
       ))}
     </>
   );

@@ -50,7 +50,8 @@ function EditorRig({ view }: { view: EditorViewId }) {
   const R = Math.max(sx, sy, sz, 1) * 2.4;
 
   if (view === 'camera') {
-    const p = cam.presets[cam.active] ?? cam.presets.hero;
+    const p =
+      cam.cameras.find((c) => c.id === cam.active) ?? cam.cameras[0];
     return (
       <>
         <PerspectiveCamera

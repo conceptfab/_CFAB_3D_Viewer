@@ -16,7 +16,7 @@ export function CameraRig() {
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
   const active = useStore((s) => s.config.camera.active);
-  const presets = useStore((s) => s.config.camera.presets);
+  const cameras = useStore((s) => s.config.camera.cameras);
   const near = useStore((s) => s.config.camera.near);
   const far = useStore((s) => s.config.camera.far);
   const orbit = useStore((s) => s.config.camera.orbit);
@@ -37,7 +37,7 @@ export function CameraRig() {
   }, [camera, registerCameraApi]);
 
   // Live fov (z aktywnej kamery) / near / far.
-  const activeFov = presets[active]?.fov ?? 28;
+  const activeFov = cameras.find((c) => c.id === active)?.fov ?? 28;
   useEffect(() => {
     camera.fov = activeFov;
     camera.near = near;
@@ -56,7 +56,7 @@ export function CameraRig() {
   // Tween przy zmianie aktywnej kamery (presety czytamy świeżo, by zapis/gizmo nie tweenował).
   useEffect(() => {
     if (!controlsRef.current) return;
-    const view = useStore.getState().config.camera.presets[active];
+    const view = useStore.getState().config.camera.cameras.find((c) => c.id === active);
     if (!view) return;
     tween.current = {
       start: performance.now(),

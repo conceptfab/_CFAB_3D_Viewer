@@ -9,7 +9,7 @@ import { DEFAULT_CONFIG } from '../store';
 
 export function Viewer() {
   const cam = DEFAULT_CONFIG.camera;
-  const initialFov = cam.presets[cam.active]?.fov ?? 28;
+  const initialFov = cam.cameras.find((c) => c.id === cam.active)?.fov ?? 28;
   return (
     <Canvas
       shadows
