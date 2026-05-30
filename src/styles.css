@@ -30,21 +30,29 @@ html, body, #root {
     radial-gradient(140% 100% at 20% 5%, #fafafa 0%, #f1f1f1 55%, #e7e7e7 100%);
 }
 
-.hud {
+.branding {
   position: absolute;
   top: 16px;
   left: 16px;
   z-index: 10;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
   backdrop-filter: blur(10px);
-  font-size: 12px;
   pointer-events: none;
 }
-.hud b { color: var(--accent); }
-.hud span { opacity: 0.5; }
+.branding__text {
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.branding__img {
+  display: block;
+  max-height: 40px;
+  max-width: 220px;
+  object-fit: contain;
+}
 
 /* Wspólny pasek narzędziowy viewportów (kamery + rzuty) — jeden spójny styl. */
 .viewport-bar {
@@ -179,13 +187,6 @@ html, body, #root {
   border-left: 1px solid var(--border);
   background: #202227;
 }
-
-.hud--editor {
-  background: rgba(20, 21, 26, 0.8);
-  color: #cfd2d8;
-}
-.hud--editor b { color: #ffcc33; }
-
 
 .editor-panel {
   display: flex;

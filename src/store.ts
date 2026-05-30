@@ -19,10 +19,13 @@ export type SceneElementId =
   | 'render'
   | 'background'
   | 'environment'
+  | 'branding'
   | 'hero'
   | 'actor'
   | 'light'
   | 'camera';
+
+export type BrandingMode = 'text' | 'image';
 
 /** Tryb gizmo dla HERO NULL. */
 export type GizmoMode = 'translate' | 'rotate' | 'scale';
@@ -59,6 +62,20 @@ export interface SceneConfig {
   shadows: { catcherOpacity: number; contactOpacity: number; contactBlur: number };
   tone: { mode: ToneMode; exposure: number };
   material: { envMapIntensity: number };
+  // Plakietka brandingowa w lewym górnym rogu finalnego widoku.
+  branding: {
+    mode: BrandingMode;
+    text: string;
+    fontFamily: string;
+    color: string;
+    fontSize: number;
+    fontWeight: number;
+    letterSpacing: number;
+    bgEnabled: boolean;
+    bgColor: string;
+    imageUrl: string;
+    imageName: string;
+  };
   // HERO NULL — transform "aktora" (rotacja w stopniach). Aktora nie edytujemy
   // bezpośrednio; przesuwamy/rotujemy/skalujemy ten null.
   hero: { position: Vec3; rotation: Vec3; scale: Vec3 };
@@ -99,6 +116,19 @@ export const DEFAULT_CONFIG: SceneConfig = {
   shadows: { catcherOpacity: 0.3, contactOpacity: 0.3, contactBlur: 2 },
   tone: { mode: 'NEUTRAL', exposure: 1.0 },
   material: { envMapIntensity: 1.0 },
+  branding: {
+    mode: 'text',
+    text: 'CONCEPTFAB',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    color: '#1b1c20',
+    fontSize: 18,
+    fontWeight: 700,
+    letterSpacing: 1.5,
+    bgEnabled: true,
+    bgColor: '#ffffff',
+    imageUrl: '',
+    imageName: '',
+  },
   hero: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
   camera: {
     near: 0.05,
@@ -163,6 +193,7 @@ interface State {
   setShadows: (patch: Partial<SceneConfig['shadows']>) => void;
   setTone: (patch: Partial<SceneConfig['tone']>) => void;
   setMaterial: (patch: Partial<SceneConfig['material']>) => void;
+  setBranding: (patch: Partial<SceneConfig['branding']>) => void;
   setHero: (patch: Partial<SceneConfig['hero']>) => void;
   setCamera: (
     patch: Partial<Pick<SceneConfig['camera'], 'near' | 'far' | 'active'>>
@@ -206,6 +237,8 @@ export const useStore = create<State>((set) => ({
     set((s) => ({ config: { ...s.config, tone: { ...s.config.tone, ...patch } } })),
   setMaterial: (patch) =>
     set((s) => ({ config: { ...s.config, material: { ...s.config.material, ...patch } } })),
+  setBranding: (patch) =>
+    set((s) => ({ config: { ...s.config, branding: { ...s.config.branding, ...patch } } })),
   setHero: (patch) =>
     set((s) => ({ config: { ...s.config, hero: { ...s.config.hero, ...patch } } })),
   setCamera: (patch) =>

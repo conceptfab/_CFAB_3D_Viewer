@@ -6,6 +6,7 @@ import {
   type ToneMode,
   type GizmoMode,
   type Vec3,
+  type BrandingMode,
 } from '../store';
 import { MODEL_CATALOG } from '../models/catalog';
 
@@ -64,6 +65,86 @@ function EnvironmentControls() {
     intensity: { value: cfg.environment.intensity, min: 0, max: 2, step: 0.01, onChange: (v: number) => useStore.getState().setEnv({ intensity: v }) },
     envMapIntensity: { value: cfg.material.envMapIntensity, min: 0, max: 3, step: 0.01, onChange: (v: number) => useStore.getState().setMaterial({ envMapIntensity: v }) },
   }), []);
+  return null;
+}
+
+/* --- Branding (plakietka w finalnym widoku) --- */
+const FONT_OPTIONS: Record<string, string> = {
+  'Inter / sans-serif': 'Inter, system-ui, sans-serif',
+  'System UI': 'system-ui, sans-serif',
+  'Georgia / serif': 'Georgia, "Times New Roman", serif',
+  Monospace: 'ui-monospace, "SF Mono", Menlo, monospace',
+  'Arial Black': '"Arial Black", Impact, sans-serif',
+};
+const BRANDING_MODES: BrandingMode[] = ['text', 'image'];
+const FONT_WEIGHTS = [300, 400, 500, 600, 700, 800, 900];
+
+function BrandingControls() {
+  const b = useStore.getState().config.branding;
+  const [, set] = useControls('Branding', () => ({
+    tryb: {
+      value: b.mode,
+      options: BRANDING_MODES,
+      onChange: (v: BrandingMode) => useStore.getState().setBranding({ mode: v }),
+    },
+    tekst: { value: b.text, onChange: (v: string) => useStore.getState().setBranding({ text: v }) },
+    krój: {
+      value: Object.values(FONT_OPTIONS).includes(b.fontFamily)
+        ? b.fontFamily
+        : Object.values(FONT_OPTIONS)[0],
+      options: FONT_OPTIONS,
+      onChange: (v: string) => useStore.getState().setBranding({ fontFamily: v }),
+    },
+    kolor: { value: b.color, onChange: (v: string) => useStore.getState().setBranding({ color: v }) },
+    rozmiar: {
+      value: b.fontSize,
+      min: 8,
+      max: 96,
+      step: 1,
+      onChange: (v: number) => useStore.getState().setBranding({ fontSize: v }),
+    },
+    grubość: {
+      value: b.fontWeight,
+      options: FONT_WEIGHTS,
+      onChange: (v: number) => useStore.getState().setBranding({ fontWeight: v }),
+    },
+    'odstęp liter': {
+      value: b.letterSpacing,
+      min: -2,
+      max: 12,
+      step: 0.5,
+      onChange: (v: number) => useStore.getState().setBranding({ letterSpacing: v }),
+    },
+    'tło plakietki': {
+      value: b.bgEnabled,
+      onChange: (v: boolean) => useStore.getState().setBranding({ bgEnabled: v }),
+    },
+    'kolor tła': {
+      value: b.bgColor,
+      onChange: (v: string) => useStore.getState().setBranding({ bgColor: v }),
+    },
+    'Wgraj logo (webp/svg/png)': button(() => (window as any).__openLogoPicker?.()),
+    'Wróć do tekstu': button(() => useStore.getState().setBranding({ mode: 'text' })),
+  }), []);
+
+  // Store → leva (wgranie logo zmienia tryb na 'image' poza panelem).
+  useEffect(
+    () =>
+      useStore.subscribe((s, prev) => {
+        if (s.config.branding === prev.config.branding) return;
+        const bb = s.config.branding;
+        set({
+          tryb: bb.mode,
+          tekst: bb.text,
+          kolor: bb.color,
+          rozmiar: bb.fontSize,
+          'odstęp liter': bb.letterSpacing,
+          'tło plakietki': bb.bgEnabled,
+          'kolor tła': bb.bgColor,
+        });
+      }),
+    [set]
+  );
   return null;
 }
 
@@ -258,6 +339,7 @@ export function Inspector() {
       {selected === 'render' && <RenderControls />}
       {selected === 'background' && <BackgroundControls />}
       {selected === 'environment' && <EnvironmentControls />}
+      {selected === 'branding' && <BrandingControls />}
       {selected === 'hero' && <HeroControls />}
       {selected === 'actor' && <ActorNote />}
       {selected === 'light' && <LightControls />}

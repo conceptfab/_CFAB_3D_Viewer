@@ -5,17 +5,14 @@ import { CameraButtons } from './ui/CameraButtons';
 import { ViewButtons } from './ui/ViewButtons';
 import { Outliner } from './ui/Outliner';
 import { Inspector } from './ui/Inspector';
-import { useStore } from './store';
+import { Branding } from './ui/Branding';
 
 export default function App() {
-  const fileName = useStore((s) => s.loadedModel?.fileName);
   return (
     <div className="layout">
       {/* 1. Finalny render (kamera sceny) */}
       <main className="viewer">
-        <div className="hud">
-          <b>Finalny widok</b> <span>· {fileName ?? 'brak modelu'}</span>
-        </div>
+        <Branding />
         <Viewer />
         <CameraButtons />
         <ModelDropzone />

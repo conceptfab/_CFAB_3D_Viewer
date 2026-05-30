@@ -38,6 +38,7 @@ export function Outliner() {
     { kind: 'item', id: 'render', label: 'Render', icon: '🎞', depth: 0 },
     { kind: 'item', id: 'background', label: 'Background', icon: '🌄', depth: 0 },
     { kind: 'item', id: 'environment', label: 'Environment', icon: '🌍', depth: 0, hint: 'HDRI' },
+    { kind: 'item', id: 'branding', label: 'Branding', icon: '🏷️', depth: 0, hint: 'logo' },
 
     { kind: 'section', label: 'Obiekty' },
     { kind: 'item', id: 'hero', label: 'HERO', icon: '◇', depth: 0, hint: 'NULL' },
