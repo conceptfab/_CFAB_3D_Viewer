@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Leva, useControls, button } from 'leva';
 import {
   useStore,
@@ -70,7 +71,7 @@ function EnvironmentControls() {
 function HeroControls() {
   const h = useStore.getState().config.hero;
   const currentUrl = useStore.getState().loadedModel?.objectUrl ?? '';
-  useControls('HERO (null)', () => ({
+  const [, set] = useControls('HERO (null)', () => ({
     model: {
       value: Object.values(MODEL_OPTIONS).includes(currentUrl)
         ? currentUrl
@@ -89,6 +90,17 @@ function HeroControls() {
     skala: { value: h.scale, step: 0.05, onChange: (v: [number, number, number]) => useStore.getState().setHero({ scale: v }) },
     'Reset transformu': button(() => useStore.getState().setHero({ position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] })),
   }), []);
+
+  // Store → leva (gizmo / inne źródła). set() nie wywołuje onChange, więc bez pętli.
+  useEffect(
+    () =>
+      useStore.subscribe((s, prev) => {
+        if (s.config.hero === prev.config.hero) return;
+        const hh = s.config.hero;
+        set({ pozycja: hh.position, 'rotacja °': hh.rotation, skala: hh.scale });
+      }),
+    [set]
+  );
   return null;
 }
 
@@ -106,13 +118,23 @@ function ActorNote() {
 /* --- Key Light --- */
 function LightControls() {
   const k = useStore.getState().config.keyLight;
-  useControls('Key Light', () => ({
+  const [, set] = useControls('Key Light', () => ({
     intensity: { value: k.intensity, min: 0, max: 3, step: 0.01, onChange: (v: number) => useStore.getState().setKeyLight({ intensity: v }) },
     color: { value: k.color, onChange: (v: string) => useStore.getState().setKeyLight({ color: v }) },
     pozycja: { value: k.position, step: 0.1, onChange: (v: [number, number, number]) => useStore.getState().setKeyLight({ position: v }) },
     castShadow: { value: k.castShadow, onChange: (v: boolean) => useStore.getState().setKeyLight({ castShadow: v }) },
     shadowBias: { value: k.shadowBias, min: -0.001, max: 0.001, step: 0.00001, onChange: (v: number) => useStore.getState().setKeyLight({ shadowBias: v }) },
   }), []);
+
+  // Store → leva (gizmo światła aktualizuje pozycję).
+  useEffect(
+    () =>
+      useStore.subscribe((s, prev) => {
+        if (s.config.keyLight === prev.config.keyLight) return;
+        set({ pozycja: s.config.keyLight.position });
+      }),
+    [set]
+  );
   return null;
 }
 
@@ -139,7 +161,7 @@ function CameraControlsInner({
   cam: CameraPresetView;
   orbit: { minDist: number; maxDist: number; damping: number };
 }) {
-  useControls(`Camera: ${id}`, () => ({
+  const [, set] = useControls(`Camera: ${id}`, () => ({
     aktywna: {
       value: active,
       onChange: (v: boolean) => {
@@ -157,6 +179,17 @@ function CameraControlsInner({
       if (view) useStore.getState().capturePreset(id, view);
     }),
   }), []);
+
+  // Store → leva (gizmo kamery / zapis widoku aktualizuje pola).
+  useEffect(
+    () =>
+      useStore.subscribe((s, prev) => {
+        const c = s.config.camera.presets[id];
+        if (!c || c === prev.config.camera.presets[id]) return;
+        set({ pozycja: c.position, target: c.target, fov: c.fov });
+      }),
+    [id, set]
+  );
   return null;
 }
 
