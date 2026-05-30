@@ -293,3 +293,65 @@ html, body, #root {
 }
 .dropzone-hint b { color: var(--ink); font-size: 14px; }
 .dropzone-hint span { font-size: 12px; }
+
+/* Outliner — operacje per-camera */
+.outliner__row--camera {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 8px;
+}
+.outliner__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 0;
+  cursor: pointer;
+  text-align: left;
+}
+.outliner__ops {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 100ms;
+}
+.outliner__row--camera:hover .outliner__ops,
+.outliner__row--camera.is-selected .outliner__ops { opacity: 1; }
+.outliner__op {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #cfd2d8;
+  font: inherit;
+  font-size: 11px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.outliner__op:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+.outliner__op:disabled { opacity: 0.25; cursor: not-allowed; }
+.outliner__op--danger:hover:not(:disabled) { background: rgba(229, 76, 76, 0.25); color: #ffb3b3; }
+
+.outliner__add {
+  display: flex;
+  align-items: center;
+  width: calc(100% - 24px);
+  margin: 4px 12px 8px;
+  padding: 6px 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  background: transparent;
+  border-radius: 6px;
+  color: #cfd2d8;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.outliner__add:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.35); }
