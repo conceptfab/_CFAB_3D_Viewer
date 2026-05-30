@@ -91,7 +91,7 @@ export function Outliner() {
           const isSel = selected === `cam:${r.id}`;
           return (
             <div
-              key={r.id}
+              key={`cam:${r.id}`}
               className={`outliner__row outliner__row--camera ${isSel ? 'is-selected' : ''}`}
               style={{ paddingLeft: 10 + r.depth * 18 }}
             >
