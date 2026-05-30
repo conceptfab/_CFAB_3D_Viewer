@@ -87,6 +87,7 @@ export function Studio() {
         resolution={1024}
         color="#1a1a20"
         frames={Infinity}
+        smooth={false}
       />
     </>
   );
