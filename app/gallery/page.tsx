@@ -3,6 +3,7 @@
 import { requireUser } from '@/lib/auth/session';
 import { listAccessible } from '@/lib/scenes/repo';
 import { SceneCard } from './_components/SceneCard';
+import { TopNav } from '@/components/TopNav';
 
 export const metadata = {
   title: 'Galeria scen — CFAB 3D Viewer',
@@ -11,11 +12,14 @@ export const metadata = {
 export default async function GalleryPage() {
   // requireUser przekierowuje na /login jeśli niezalogowany
   const user = await requireUser();
+  const isAdmin = user.role === 'admin';
 
   const scenes = await listAccessible(user.id);
 
   return (
-    <main className="gallery-page">
+    <>
+      <TopNav isAdmin={isAdmin} email={user.email} active="gallery" />
+      <main className="gallery-page">
       <header className="gallery-header">
         <h1>Galeria scen</h1>
         <a href="/editor" className="btn-primary">
@@ -42,5 +46,6 @@ export default async function GalleryPage() {
         </div>
       )}
     </main>
+    </>
   );
 }

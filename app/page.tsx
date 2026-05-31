@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth/session';
 import { listScenes, listAllPresets } from '@/lib/scenes/repo';
 import { SceneGrid } from '@/components/scenes/SceneGrid';
 import { PresetCard } from '@/components/PresetCard';
+import { TopNav } from '@/components/TopNav';
 
 /**
  * Strona startowa zalogowanego użytkownika.
@@ -20,7 +21,9 @@ export default async function HomePage() {
   const presets = await listAllPresets();
 
   return (
-    <main className="home-page">
+    <>
+      <TopNav isAdmin={isAdmin} email={user.email} active="home" />
+      <main className="home-page">
       <header className="home-header">
         <h1>Moje sceny</h1>
         <Link href="/editor" className="home-btn-new">
@@ -67,5 +70,6 @@ export default async function HomePage() {
         <SceneGrid initialScenes={scenes} />
       )}
     </main>
+    </>
   );
 }

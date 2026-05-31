@@ -32,6 +32,13 @@ export default function App({ isAdmin = false }: { isAdmin?: boolean }) {
       {/* 3. Outliner + inspektor kontekstowy */}
       <aside className="editor-panel">
         <div className="editor-panel__title">
+          <a
+            href="/"
+            title="Wyjdź do moich scen / panelu"
+            style={{ fontSize: 12, fontWeight: 700, color: '#2a8a66', textDecoration: 'none', whiteSpace: 'nowrap' }}
+          >
+            ← Sceny
+          </a>
           <span>Outliner</span>
           <div style={{ display: 'flex', gap: 6 }}>
             <button
