@@ -32,8 +32,10 @@ export async function POST(request: Request): Promise<NextResponse> {
             'application/octet-stream',
             'image/png',
           ],
-          // Maksymalny rozmiar: 100 MB dla modeli, 1 MB dla miniatur.
-          maximumSizeInBytes: pathname.startsWith('models/') ? 100_000_000 : 1_000_000,
+          // Maksymalny rozmiar: 1 GB dla modeli (duże .glb), 5 MB dla miniatur.
+          // Uwaga: modele >100 MB ładują się wolno w przeglądarce i mocno zużywają
+          // transfer/Blob — warto je kompresować (Draco / meshopt / gltfpack).
+          maximumSizeInBytes: pathname.startsWith('models/') ? 1_000_000_000 : 5_000_000,
           tokenPayload: JSON.stringify({ userId: user.id }),
         };
       },

@@ -34,6 +34,7 @@ export async function uploadAssets(
       upload(`models/${modelUuid}.glb`, modelFile, {
         access: 'public',
         handleUploadUrl: '/api/blob/upload',
+        multipart: true, // duże .glb wgrywane w kawałkach — niezawodne dla >100 MB
       }),
       thumbPromise,
     ]);
