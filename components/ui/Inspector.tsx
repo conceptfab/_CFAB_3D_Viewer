@@ -263,6 +263,11 @@ function CameraControlsInner({
   const [, set] = useControls(
     `Camera: ${id}`,
     () => ({
+      'tryb gizmo': {
+        value: useStore.getState().aimGizmoMode,
+        options: AIM_MODES,
+        onChange: (v: AimGizmoMode) => useStore.getState().setAimGizmoMode(v),
+      },
       nazwa: {
         value: cam.name,
         onChange: (v: string) => useStore.getState().renameCamera(id, v),
