@@ -11,6 +11,7 @@ import { Inspector } from './ui/Inspector';
 import { Branding } from './ui/Branding';
 import { SaveSceneDialog } from './scenes/SaveSceneDialog';
 import { ShareDialog } from './scenes/ShareDialog';
+import { IconSave, IconPreset, IconLink } from './ui/icons';
 
 export default function App({
   isAdmin = false,
@@ -54,29 +55,32 @@ export default function App({
             <button
               type="button"
               onClick={() => setSaveMode('scene')}
-              className="save-scene-btn"
+              className="icon-btn"
               title="Zapisz scenę"
+              aria-label="Zapisz scenę"
             >
-              Zapisz scenę
+              <IconSave />
             </button>
             {isAdmin && (
               <button
                 type="button"
                 onClick={() => setSaveMode('preset')}
-                className="save-scene-btn"
+                className="icon-btn"
                 title="Zapisz jako preset"
+                aria-label="Zapisz jako preset"
               >
-                Jako preset
+                <IconPreset />
               </button>
             )}
             {sceneId && (
               <button
                 type="button"
                 onClick={() => setShareOpen(true)}
-                className="save-scene-btn"
+                className="icon-btn"
                 title="Link publiczny / embed do tej sceny"
+                aria-label="Link publiczny"
               >
-                Link publiczny
+                <IconLink />
               </button>
             )}
           </div>
