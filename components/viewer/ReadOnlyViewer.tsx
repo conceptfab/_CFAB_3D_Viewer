@@ -40,6 +40,9 @@ export function ReadOnlyViewer({ config, modelUrl }: ReadOnlyViewerProps) {
   const cfg = useMemo(() => normalizeConfig(config), [config]);
 
   // Initialise the global store synchronously before the first render.
+  // Mounted once per scene (dynamic ssr:false import on a server-rendered
+  // /s/ or /embed/ page) — the `config` prop is stable for this component's
+  // lifetime, so capturing `cfg` in this once-only ([] deps) init is safe.
   useMemo(() => {
     const store = useStore.getState();
     store.setEnv(cfg.environment);
