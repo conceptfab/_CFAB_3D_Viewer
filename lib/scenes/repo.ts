@@ -118,6 +118,18 @@ export async function deleteScene(id: string): Promise<void> {
   }
 }
 
+/**
+ * Zwraca wszystkie presety (is_preset=true) — globalne, widoczne dla każdego zalogowanego.
+ */
+export async function listAllPresets(): Promise<SceneRecord[]> {
+  const rows = await db
+    .select()
+    .from(scenes)
+    .where(eq(scenes.isPreset, true));
+
+  return rows.map(rowToRecord);
+}
+
 // ─── NOWE W ETAPIE C ─────────────────────────────────────────────────────────
 
 /**
