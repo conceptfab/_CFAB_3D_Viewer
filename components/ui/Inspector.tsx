@@ -220,19 +220,25 @@ function ActorNote() {
 function LightControls() {
   const k = useStore.getState().config.keyLight;
   const [, set] = useControls('Key Light', () => ({
+    'tryb gizmo': {
+      value: useStore.getState().aimGizmoMode,
+      options: AIM_MODES,
+      onChange: (v: AimGizmoMode) => useStore.getState().setAimGizmoMode(v),
+    },
     intensity: { value: k.intensity, min: 0, max: 3, step: 0.01, onChange: (v: number) => useStore.getState().setKeyLight({ intensity: v }) },
     color: { value: k.color, onChange: (v: string) => useStore.getState().setKeyLight({ color: v }) },
     pozycja: { value: k.position, step: 0.1, onChange: (v: [number, number, number]) => useStore.getState().setKeyLight({ position: v }) },
+    target: { value: k.target, step: 0.1, onChange: (v: [number, number, number]) => useStore.getState().setKeyLight({ target: v }) },
     castShadow: { value: k.castShadow, onChange: (v: boolean) => useStore.getState().setKeyLight({ castShadow: v }) },
     shadowBias: { value: k.shadowBias, min: -0.001, max: 0.001, step: 0.00001, onChange: (v: number) => useStore.getState().setKeyLight({ shadowBias: v }) },
   }), []);
 
-  // Store → leva (gizmo światła aktualizuje pozycję).
+  // Store → leva (gizmo updates position/target).
   useEffect(
     () =>
       useStore.subscribe((s, prev) => {
         if (s.config.keyLight === prev.config.keyLight) return;
-        set({ pozycja: s.config.keyLight.position });
+        set({ pozycja: s.config.keyLight.position, target: s.config.keyLight.target });
       }),
     [set]
   );
