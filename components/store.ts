@@ -189,7 +189,14 @@ function deepMerge<T>(base: T, override: unknown): T {
   if (!isPlainObject(base) || !isPlainObject(override)) {
     return structuredClone(override) as T;
   }
-  const out: Json = structuredClone(base) as Json;
+  // Clone only base keys the override does NOT touch; merge the rest. Avoids
+  // deep-cloning subtrees that get overwritten anyway (once-per-scene-load, but
+  // this helper is reusable). All base keys are still preserved.
+  const overrideKeys = new Set(Object.keys(override));
+  const out: Json = {};
+  for (const key of Object.keys(base as Json)) {
+    if (!overrideKeys.has(key)) out[key] = structuredClone((base as Json)[key]);
+  }
   for (const key of Object.keys(override)) {
     out[key] = deepMerge((base as Json)[key], (override as Json)[key]);
   }

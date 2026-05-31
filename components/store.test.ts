@@ -179,7 +179,7 @@ describe('camera operations', () => {
   });
 });
 
-describe('new editor state + setters', () => {
+describe('nowy stan edytora + settery', () => {
   beforeEach(reset);
 
   it('aimGizmoMode domyślnie translate', () => {
