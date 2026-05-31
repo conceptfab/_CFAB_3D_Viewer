@@ -9,6 +9,8 @@ import { uploadAssets } from './uploadAssets';
 
 interface SaveSceneDialogProps {
   onClose: () => void;
+  /** true = zapis jako preset (admin-only, egzekwowane też serwerowo) */
+  preset?: boolean;
 }
 
 /**
@@ -16,7 +18,7 @@ interface SaveSceneDialogProps {
  * Renderowany poza drzewem <Canvas>. Dostęp do WebGLRenderer przez store.glRef
  * (rejestrowany w onCreated callbacku Canvas w Viewer.tsx).
  */
-export function SaveSceneDialog({ onClose }: SaveSceneDialogProps) {
+export function SaveSceneDialog({ onClose, preset = false }: SaveSceneDialogProps) {
   const router = useRouter();
   const config = useStore((s) => s.config);
   const loadedModel = useStore((s) => s.loadedModel);
@@ -75,6 +77,7 @@ export function SaveSceneDialog({ onClose }: SaveSceneDialogProps) {
           modelBlobUrl,
           modelFileName: loadedModel.fileName,
           thumbBlobUrl,
+          isPreset: preset,
         }),
       });
 
@@ -97,7 +100,7 @@ export function SaveSceneDialog({ onClose }: SaveSceneDialogProps) {
   return (
     <div className="save-scene-overlay" role="dialog" aria-modal="true">
       <div className="save-scene-modal">
-        <h2>Zapisz scenę</h2>
+        <h2>{preset ? 'Zapisz jako preset' : 'Zapisz scenę'}</h2>
 
         <label htmlFor="scene-title">Tytuł sceny</label>
         <input

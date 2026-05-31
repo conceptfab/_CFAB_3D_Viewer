@@ -152,19 +152,7 @@ function BrandingControls() {
 /* --- HERO NULL --- */
 function HeroControls() {
   const h = useStore.getState().config.hero;
-  const currentUrl = useStore.getState().loadedModel?.objectUrl ?? '';
   const [, set] = useControls('HERO (null)', () => ({
-    model: {
-      value: Object.values(MODEL_OPTIONS).includes(currentUrl)
-        ? currentUrl
-        : Object.values(MODEL_OPTIONS)[0],
-      options: MODEL_OPTIONS,
-      onChange: (url: string) => {
-        if (useStore.getState().loadedModel?.objectUrl === url) return;
-        const label = Object.keys(MODEL_OPTIONS).find((k) => MODEL_OPTIONS[k] === url) ?? 'model';
-        useStore.getState().setLoadedModel({ objectUrl: url, fileName: label, file: null });
-      },
-    },
     'Wczytaj plik (.glb)': button(() => (window as any).__openModelPicker?.()),
     'tryb gizmo': { value: useStore.getState().gizmoMode, options: GIZMO_MODES, onChange: (v: GizmoMode) => useStore.getState().setGizmoMode(v) },
     pozycja: { value: h.position, step: 0.05, onChange: (v: [number, number, number]) => useStore.getState().setHero({ position: v }) },

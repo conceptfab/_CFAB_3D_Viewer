@@ -10,8 +10,8 @@ import { Inspector } from './ui/Inspector';
 import { Branding } from './ui/Branding';
 import { SaveSceneDialog } from './scenes/SaveSceneDialog';
 
-export default function App() {
-  const [saveOpen, setSaveOpen] = useState(false);
+export default function App({ isAdmin = false }: { isAdmin?: boolean }) {
+  const [saveMode, setSaveMode] = useState<'scene' | 'preset' | null>(null);
 
   return (
     <div className="layout">
@@ -32,21 +32,38 @@ export default function App() {
       {/* 3. Outliner + inspektor kontekstowy */}
       <aside className="editor-panel">
         <div className="editor-panel__title">
-          Outliner
-          <button
-            type="button"
-            onClick={() => setSaveOpen(true)}
-            className="save-scene-btn"
-            title="Zapisz scenę"
-          >
-            Zapisz scenę
-          </button>
+          <span>Outliner</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => setSaveMode('scene')}
+              className="save-scene-btn"
+              title="Zapisz scenę"
+            >
+              Zapisz scenę
+            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setSaveMode('preset')}
+                className="save-scene-btn"
+                title="Zapisz jako preset"
+              >
+                Jako preset
+              </button>
+            )}
+          </div>
         </div>
         <Outliner />
         <Inspector />
       </aside>
 
-      {saveOpen && <SaveSceneDialog onClose={() => setSaveOpen(false)} />}
+      {saveMode && (
+        <SaveSceneDialog
+          preset={saveMode === 'preset'}
+          onClose={() => setSaveMode(null)}
+        />
+      )}
     </div>
   );
 }
