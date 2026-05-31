@@ -8,11 +8,22 @@ import {
   type GizmoMode,
   type Vec3,
   type BrandingMode,
+  type AntialiasingMode,
+  type AimGizmoMode,
 } from '../store';
 import { MODEL_CATALOG } from '../models/catalog';
 
 const TONE_OPTIONS: ToneMode[] = ['NEUTRAL', 'ACES_FILMIC', 'AGX', 'REINHARD'];
 const GIZMO_MODES: GizmoMode[] = ['translate', 'rotate', 'scale'];
+const AIM_MODES: AimGizmoMode[] = ['translate', 'rotate', 'target'];
+const AA_OPTIONS: Record<string, AntialiasingMode> = {
+  'Wyłącz': 'OFF',
+  FXAA: 'FXAA',
+  'SMAA Low': 'SMAA_LOW',
+  'SMAA Medium': 'SMAA_MEDIUM',
+  'SMAA High': 'SMAA_HIGH',
+  'SMAA Ultra': 'SMAA_ULTRA',
+};
 
 // Mapa label→url dla wbudowanych modeli (select w panelu HERO).
 const MODEL_OPTIONS: Record<string, string> = MODEL_CATALOG.reduce(
@@ -31,12 +42,17 @@ function SceneControls() {
   return null;
 }
 
-/* --- Render (tone mapping / ekspozycja) --- */
+/* --- Render (tone mapping / ekspozycja / antyaliasing) --- */
 function RenderControls() {
   const t = useStore.getState().config.tone;
   useControls('Render', () => ({
     tone: { value: t.mode, options: TONE_OPTIONS, onChange: (v: ToneMode) => useStore.getState().setTone({ mode: v }) },
     exposure: { value: t.exposure, min: 0.1, max: 3, step: 0.01, onChange: (v: number) => useStore.getState().setTone({ exposure: v }) },
+    antialiasing: {
+      value: useStore.getState().config.antialiasing,
+      options: AA_OPTIONS,
+      onChange: (v: AntialiasingMode) => useStore.getState().setAntialiasing(v),
+    },
   }), []);
   return null;
 }
