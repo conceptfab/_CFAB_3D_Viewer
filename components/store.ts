@@ -2,6 +2,14 @@ import { create } from 'zustand';
 
 export type ToneMode = 'NEUTRAL' | 'ACES_FILMIC' | 'AGX' | 'REINHARD';
 
+export type AntialiasingMode =
+  | 'OFF'
+  | 'FXAA'
+  | 'SMAA_LOW'
+  | 'SMAA_MEDIUM'
+  | 'SMAA_HIGH'
+  | 'SMAA_ULTRA';
+
 /** Rzuty uproszczonego viewportu edycyjnego (środkowy panel). */
 export type EditorView =
   | 'top'
@@ -52,6 +60,7 @@ export interface SceneConfig {
   background: { stops: [string, string, string, string]; centerY: number };
   keyLight: {
     position: Vec3;
+    target: Vec3;
     intensity: number;
     color: string;
     castShadow: boolean;
@@ -62,6 +71,7 @@ export interface SceneConfig {
   shadows: { catcherOpacity: number; contactOpacity: number; contactBlur: number };
   tone: { mode: ToneMode; exposure: number };
   material: { envMapIntensity: number };
+  antialiasing: AntialiasingMode;
   // Plakietka brandingowa w lewym górnym rogu finalnego widoku.
   branding: {
     mode: BrandingMode;
@@ -106,6 +116,7 @@ export const DEFAULT_CONFIG: SceneConfig = {
   },
   keyLight: {
     position: [-2.5, 4, 3],
+    target: [0, 0, 0],
     intensity: 0.55,
     color: '#ffffff',
     castShadow: true,
@@ -116,6 +127,7 @@ export const DEFAULT_CONFIG: SceneConfig = {
   shadows: { catcherOpacity: 0.3, contactOpacity: 0.3, contactBlur: 2 },
   tone: { mode: 'NEUTRAL', exposure: 1.0 },
   material: { envMapIntensity: 1.0 },
+  antialiasing: 'SMAA_MEDIUM',
   branding: {
     mode: 'text',
     text: 'CONCEPTFAB',
