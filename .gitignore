@@ -34,3 +34,6 @@ pnpm-debug.log*
 !.vscode/extensions.json
 .idea/
 *.local
+
+# Playwright MCP artifacts
+.playwright-mcp/
