@@ -177,6 +177,31 @@ export function replaceStop(
   return next;
 }
 
+type Json = Record<string, unknown>;
+const isPlainObject = (v: unknown): v is Json =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** Deep-merge `override` onto `base`. Arrays and primitives in `override`
+ *  replace `base` wholesale (no element merge); nested plain objects merge
+ *  per-key. Missing keys fall back to `base`. */
+function deepMerge<T>(base: T, override: unknown): T {
+  if (override === undefined || override === null) return structuredClone(base);
+  if (!isPlainObject(base) || !isPlainObject(override)) {
+    return structuredClone(override) as T;
+  }
+  const out: Json = structuredClone(base) as Json;
+  for (const key of Object.keys(override)) {
+    out[key] = deepMerge((base as Json)[key], (override as Json)[key]);
+  }
+  return out as T;
+}
+
+/** Merge a loaded (possibly legacy / partial) config over DEFAULT_CONFIG so
+ *  every field — including newly added ones — has a valid value. */
+export function normalizeConfig(raw: unknown): SceneConfig {
+  return deepMerge(DEFAULT_CONFIG, raw);
+}
+
 export interface LoadedModel {
   objectUrl: string;
   fileName: string;
