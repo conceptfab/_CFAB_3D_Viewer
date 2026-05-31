@@ -107,22 +107,6 @@ html, body, #root {
 /* Uwzględnij safe-area (notch / pasek gestów) — pasek zawsze nad krawędzią. */
 .viewport-bar--bottom { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
 
-/* Wąskie ekrany (telefon pionowo): pozwól zawinąć przyciski, by pasek nie
-   wyjeżdżał poza widoczny obszar i pozostał czytelny nad dolną krawędzią.
-   Kompaktowe przyciski — 4 kamery mieszczą się w JEDNYM rzędzie; drugi rząd
-   pojawia się dopiero, gdy kamer jest więcej (flex-wrap). */
-@media (max-width: 640px) {
-  .viewport-bar--bottom {
-    max-width: calc(100vw - 16px);
-    flex-wrap: wrap;
-    gap: 3px;
-    padding: 4px;
-  }
-  .viewport-bar--bottom button {
-    padding: 5px 8px;
-    font-size: 11px;
-  }
-}
 .viewport-bar button {
   appearance: none;
   border: 0;
@@ -139,6 +123,25 @@ html, body, #root {
 }
 .viewport-bar button:hover { background: rgba(255, 255, 255, 0.08); }
 .viewport-bar button.active { background: #ffcc33; color: #1c1917; }
+
+/* Wąskie ekrany (telefon pionowo): pozwól zawinąć przyciski, by pasek nie
+   wyjeżdżał poza widoczny obszar i pozostał czytelny nad dolną krawędzią.
+   Kompaktowe przyciski — 4 kamery (nazwy ≤8 znaków) mieszczą się w JEDNYM
+   rzędzie; drugi rząd pojawia się dopiero, gdy kamer jest więcej (flex-wrap).
+   UWAGA: ten blok MUSI być po bazowych regułach `.viewport-bar button`,
+   inaczej (równa specyficzność) bazowe nadpiszą mobilne. */
+@media (max-width: 640px) {
+  .viewport-bar--bottom {
+    max-width: calc(100vw - 16px);
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 4px;
+  }
+  .viewport-bar--bottom button {
+    padding: 4px 7px;
+    font-size: 11px;
+  }
+}
 
 .sidebar {
   background: var(--surface);
