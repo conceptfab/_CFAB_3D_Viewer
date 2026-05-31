@@ -29,6 +29,7 @@ export function ViewButtons() {
       <div className="viewport-bar">
         {PROJECTIONS.map((v) => (
           <button
+            type="button"
             key={v.id}
             className={view === v.id ? 'active' : ''}
             onClick={() => setEditorView(v.id)}
@@ -42,6 +43,7 @@ export function ViewButtons() {
           const isActive = view === 'camera' && active === c.id;
           return (
             <button
+              type="button"
               key={c.id}
               className={isActive ? 'active' : ''}
               onClick={() => {

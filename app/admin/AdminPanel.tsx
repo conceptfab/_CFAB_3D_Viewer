@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { UserRow } from '@/lib/db/schema';
 
 export default function AdminPanel({ initialUsers }: { initialUsers: UserRow[] }) {
@@ -67,7 +68,7 @@ export default function AdminPanel({ initialUsers }: { initialUsers: UserRow[] }
     <main style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>Panel admina</h1>
-        <a href="/" style={styles.backLink}>← Strona główna</a>
+        <Link href="/" style={styles.backLink}>← Strona główna</Link>
       </div>
 
       {/* Formularz dodawania */}
@@ -124,7 +125,7 @@ export default function AdminPanel({ initialUsers }: { initialUsers: UserRow[] }
                       onChange={(e) => handlePatch(u.id, { status: e.target.value })}
                       style={{
                         ...styles.select,
-                        color: u.status === 'blocked' ? '#dc2626' : 'inherit',
+                        color: u.status === 'blocked' ? 'var(--danger)' : 'var(--ink)',
                       }}
                     >
                       <option value="allowed">allowed</option>
@@ -136,6 +137,7 @@ export default function AdminPanel({ initialUsers }: { initialUsers: UserRow[] }
                   </td>
                   <td style={styles.td}>
                     <button
+                      type="button"
                       onClick={() => handleDelete(u.id, u.email)}
                       style={styles.deleteBtn}
                     >
@@ -153,22 +155,22 @@ export default function AdminPanel({ initialUsers }: { initialUsers: UserRow[] }
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: { maxWidth: 900, margin: '0 auto', padding: '32px 20px', fontFamily: 'ui-sans-serif, system-ui, sans-serif' },
+  container: { maxWidth: 900, margin: '0 auto', padding: '32px 20px', fontFamily: 'var(--font-inter), ui-sans-serif, system-ui, sans-serif' },
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 },
-  title: { fontSize: 22, fontWeight: 700, margin: 0, color: '#1c1917' },
-  backLink: { fontSize: 14, color: '#78716c', textDecoration: 'none' },
-  section: { marginBottom: 32, background: '#fff', borderRadius: 10, border: '1px solid rgba(0,0,0,0.08)', padding: 24 },
-  sectionTitle: { fontSize: 15, fontWeight: 600, margin: '0 0 16px', color: '#1c1917' },
+  title: { fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--ink)' },
+  backLink: { fontSize: 14, color: 'var(--muted)', textDecoration: 'none' },
+  section: { marginBottom: 32, background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--border)', padding: 24 },
+  sectionTitle: { fontSize: 15, fontWeight: 600, margin: '0 0 16px', color: 'var(--ink)' },
   addForm: { display: 'flex', gap: 10 },
-  input: { flex: 1, padding: '9px 13px', border: '1px solid rgba(0,0,0,0.15)', borderRadius: 7, fontSize: 14 },
-  btn: { padding: '9px 20px', background: '#2a8a66', color: '#fff', border: 'none', borderRadius: 7, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  success: { fontSize: 13, color: '#2a8a66', margin: '10px 0 0' },
-  error: { fontSize: 13, color: '#dc2626', margin: '10px 0 0' },
+  input: { flex: 1, padding: '9px 13px', border: '1px solid var(--border-strong)', borderRadius: 7, fontSize: 14, color: 'var(--ink)', background: 'var(--surface-2)' },
+  btn: { padding: '9px 20px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 7, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  success: { fontSize: 13, color: 'var(--ok)', margin: '10px 0 0' },
+  error: { fontSize: 13, color: 'var(--danger)', margin: '10px 0 0' },
   tableWrapper: { overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 14 },
-  th: { textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid rgba(0,0,0,0.08)', color: '#78716c', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' },
-  tr: { borderBottom: '1px solid rgba(0,0,0,0.05)' },
-  td: { padding: '10px 12px', color: '#1c1917' },
-  select: { padding: '4px 8px', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 5, fontSize: 13, background: '#fff', cursor: 'pointer' },
-  deleteBtn: { padding: '4px 10px', background: 'none', border: '1px solid #dc2626', color: '#dc2626', borderRadius: 5, fontSize: 12, cursor: 'pointer' },
+  th: { textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid var(--border)', color: 'var(--muted)', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' },
+  tr: { borderBottom: '1px solid var(--border)' },
+  td: { padding: '10px 12px', color: 'var(--ink)' },
+  select: { padding: '4px 8px', border: '1px solid var(--border-strong)', borderRadius: 5, fontSize: 13, color: 'var(--ink)', background: 'var(--surface-2)', cursor: 'pointer' },
+  deleteBtn: { padding: '4px 10px', background: 'none', border: '1px solid var(--danger-border)', color: 'var(--danger)', borderRadius: 5, fontSize: 12, cursor: 'pointer' },
 };

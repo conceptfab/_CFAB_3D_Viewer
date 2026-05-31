@@ -91,12 +91,14 @@ export function ShareLinksPanel({ sceneId }: Props) {
                     </span>
                     <code className="share-links-list__url">{url}</code>
                     <button
+                      type="button"
                       className="btn-xs"
                       onClick={() => handleCopy(link.token, link.mode)}
                     >
                       {copied === link.token ? 'Skopiowano!' : 'Kopiuj'}
                     </button>
                     <button
+                      type="button"
                       className="btn-xs btn-danger"
                       onClick={() => handleRevoke(link.id)}
                     >
@@ -149,6 +151,7 @@ export function ShareLinksPanel({ sceneId }: Props) {
               Embed (/embed/)
             </label>
             <button
+              type="button"
               className="btn-sm btn-primary"
               onClick={handleCreate}
               disabled={creating}

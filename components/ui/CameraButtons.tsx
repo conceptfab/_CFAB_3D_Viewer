@@ -16,6 +16,7 @@ export function CameraButtons() {
     <div className="viewport-bar viewport-bar--bottom">
       {visible.map((c) => (
         <button
+          type="button"
           key={c.id}
           className={active === c.id ? 'active' : ''}
           onClick={() => setCamera({ active: c.id })}

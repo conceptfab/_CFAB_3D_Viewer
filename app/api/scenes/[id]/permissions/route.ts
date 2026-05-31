@@ -70,7 +70,7 @@ export async function GET(_req: Request, ctx: Ctx): Promise<NextResponse> {
 // ── POST — dodaj uprawnienie po e-mailu (tylko właściciel) ──────────────────
 
 const PostSchema = z.object({
-  email: z.string().email('Nieprawidłowy e-mail'),
+  email: z.email('Nieprawidłowy e-mail'),
   canEdit: z.boolean(),
 });
 

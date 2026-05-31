@@ -49,7 +49,7 @@ export async function GET(_req: Request, ctx: Ctx): Promise<NextResponse> {
 const PatchSceneSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   config: z.record(z.string(), z.unknown()).optional(),
-  thumbBlobUrl: z.string().url().nullable().optional(),
+  thumbBlobUrl: z.url().nullable().optional(),
 });
 
 export async function PATCH(request: Request, ctx: Ctx): Promise<NextResponse> {

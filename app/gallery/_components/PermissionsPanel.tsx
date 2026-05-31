@@ -107,6 +107,7 @@ export function PermissionsPanel({ sceneId }: Props) {
                     {perm.canEdit ? 'Edycja' : 'Podgląd'}
                   </span>
                   <button
+                    type="button"
                     className="btn-xs"
                     onClick={() => handleToggleEdit(perm)}
                     title={perm.canEdit ? 'Ogranicz do podglądu' : 'Przyznaj edycję'}
@@ -114,6 +115,7 @@ export function PermissionsPanel({ sceneId }: Props) {
                     {perm.canEdit ? '→ Podgląd' : '→ Edycja'}
                   </button>
                   <button
+                    type="button"
                     className="btn-xs btn-danger"
                     onClick={() => handleRemove(perm)}
                     title="Usuń dostęp"

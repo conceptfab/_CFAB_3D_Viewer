@@ -70,6 +70,7 @@ export function SceneCard({ scene, isOwner }: SceneCardProps) {
         {isOwner && (
           <>
             <button
+              type="button"
               className="btn-sm"
               onClick={() => {
                 setShowPermissions(!showPermissions);
@@ -79,6 +80,7 @@ export function SceneCard({ scene, isOwner }: SceneCardProps) {
               Dostęp
             </button>
             <button
+              type="button"
               className="btn-sm"
               onClick={() => {
                 setShowShareLinks(!showShareLinks);
@@ -88,6 +90,7 @@ export function SceneCard({ scene, isOwner }: SceneCardProps) {
               Linki
             </button>
             <button
+              type="button"
               className="btn-sm btn-danger"
               onClick={handleDelete}
               disabled={deleting}

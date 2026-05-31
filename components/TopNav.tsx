@@ -25,8 +25,8 @@ export function TopNav({
         fontSize: 14,
         fontWeight: 600,
         whiteSpace: 'nowrap',
-        color: active === key ? '#fff' : '#1b1c20',
-        background: active === key ? '#2a8a66' : 'transparent',
+        color: active === key ? 'var(--accent-ink)' : 'var(--ink)',
+        background: active === key ? 'var(--accent)' : 'transparent',
       }}
     >
       {label}
@@ -40,8 +40,8 @@ export function TopNav({
         alignItems: 'center',
         gap: 6,
         padding: '10px 20px',
-        borderBottom: '1px solid #e3e3e6',
-        background: '#fff',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--surface)',
         position: 'sticky',
         top: 0,
         zIndex: 50,
@@ -53,7 +53,7 @@ export function TopNav({
         style={{
           fontWeight: 800,
           fontSize: 16,
-          color: '#1b1c20',
+          color: 'var(--ink)',
           textDecoration: 'none',
           marginRight: 8,
         }}
@@ -65,7 +65,7 @@ export function TopNav({
       {item('/editor', '+ Nowa scena', 'editor')}
       {isAdmin && item('/admin', 'Admin', 'admin')}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 13, color: '#6b6b70' }}>{email}</span>
+        <span style={{ fontSize: 13, color: 'var(--muted)' }}>{email}</span>
         <LogoutButton />
       </div>
     </nav>

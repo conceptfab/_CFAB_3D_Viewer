@@ -65,6 +65,7 @@ export function SaveAsPresetButton({
   return (
     <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
       <button
+        type="button"
         onClick={handleSaveAsPreset}
         disabled={loading}
         style={{

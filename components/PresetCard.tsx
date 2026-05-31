@@ -58,11 +58,11 @@ export function PresetCard({ preset, isAdmin, onDelete }: PresetCardProps) {
     <article
       style={{
         position: 'relative',
-        border: '2px solid #4a6fa5',
+        border: '1px solid var(--accent-2)',
         borderRadius: 10,
         overflow: 'hidden',
-        background: '#1a1a2e',
-        color: '#e0e0e0',
+        background: 'var(--surface-2)',
+        color: 'var(--ink)',
         width: 220,
         flexShrink: 0,
       }}
@@ -74,8 +74,8 @@ export function PresetCard({ preset, isAdmin, onDelete }: PresetCardProps) {
           position: 'absolute',
           top: 8,
           left: 8,
-          background: '#4a6fa5',
-          color: '#fff',
+          background: 'var(--accent-2)',
+          color: 'var(--accent-ink)',
           fontSize: 10,
           fontWeight: 700,
           letterSpacing: 1.2,
@@ -89,7 +89,7 @@ export function PresetCard({ preset, isAdmin, onDelete }: PresetCardProps) {
       </span>
 
       {/* Miniatura */}
-      <div style={{ width: '100%', height: 130, background: '#111', overflow: 'hidden' }}>
+      <div style={{ width: '100%', height: 130, background: 'var(--surface-3)', overflow: 'hidden' }}>
         {preset.thumbBlobUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -105,7 +105,7 @@ export function PresetCard({ preset, isAdmin, onDelete }: PresetCardProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#555',
+              color: 'var(--faint)',
               fontSize: 12,
             }}
           >
@@ -129,24 +129,25 @@ export function PresetCard({ preset, isAdmin, onDelete }: PresetCardProps) {
         >
           {preset.title}
         </h3>
-        <p style={{ margin: '0 0 10px', fontSize: 11, color: '#888' }}>
+        <p style={{ margin: '0 0 10px', fontSize: 11, color: 'var(--muted)' }}>
           {preset.modelFileName ?? 'brak modelu'}
         </p>
 
         {error && (
-          <p style={{ color: '#ff6b6b', fontSize: 11, margin: '0 0 8px' }}>{error}</p>
+          <p style={{ color: 'var(--danger)', fontSize: 11, margin: '0 0 8px' }}>{error}</p>
         )}
 
         {/* Akcje */}
         <div style={{ display: 'flex', gap: 6 }}>
           <button
+            type="button"
             onClick={handleUse}
             disabled={loading}
             style={{
               flex: 1,
               padding: '6px 0',
-              background: '#4a6fa5',
-              color: '#fff',
+              background: 'var(--accent)',
+              color: 'var(--accent-ink)',
               border: 'none',
               borderRadius: 5,
               fontSize: 12,
@@ -161,13 +162,14 @@ export function PresetCard({ preset, isAdmin, onDelete }: PresetCardProps) {
           {/* Usuń — tylko admin (gated server-side also) */}
           {isAdmin && (
             <button
+              type="button"
               onClick={handleDelete}
               disabled={loading}
               style={{
                 padding: '6px 10px',
                 background: 'transparent',
-                color: '#ff6b6b',
-                border: '1px solid #ff6b6b',
+                color: 'var(--danger)',
+                border: '1px solid var(--danger-border)',
                 borderRadius: 5,
                 fontSize: 12,
                 cursor: loading ? 'wait' : 'pointer',

@@ -80,6 +80,7 @@ export function Outliner() {
         if (r.kind === 'add-camera') {
           return (
             <button
+              type="button"
               key={`add${i}`}
               className="outliner__add"
               onClick={() => addCamera()}
@@ -97,6 +98,7 @@ export function Outliner() {
               style={{ paddingLeft: 10 + r.depth * 18 }}
             >
               <button
+                type="button"
                 className="outliner__main"
                 onClick={() => setSelected(`cam:${r.id}`)}
               >
@@ -106,6 +108,7 @@ export function Outliner() {
               </button>
               <div className="outliner__ops">
                 <button
+                  type="button"
                   className="outliner__op"
                   disabled={!r.canUp}
                   title="W górę"
@@ -114,6 +117,7 @@ export function Outliner() {
                   ↑
                 </button>
                 <button
+                  type="button"
                   className="outliner__op"
                   disabled={!r.canDown}
                   title="W dół"
@@ -122,6 +126,7 @@ export function Outliner() {
                   ↓
                 </button>
                 <button
+                  type="button"
                   className="outliner__op outliner__op--danger"
                   disabled={!r.canRemove}
                   title="Usuń"
@@ -141,13 +146,14 @@ export function Outliner() {
               className={`outliner__row outliner__row--camera ${selected === 'actor' ? 'is-selected' : ''}`}
               style={{ paddingLeft: 10 + r.depth * 18 }}
             >
-              <button className="outliner__main" onClick={() => setSelected('actor')}>
+              <button type="button" className="outliner__main" onClick={() => setSelected('actor')}>
                 <span className="outliner__icon">{r.icon}</span>
                 <span className="outliner__label">{r.label}</span>
                 {r.hint && <span className="outliner__hint">{r.hint}</span>}
               </button>
               <div className="outliner__ops">
                 <button
+                  type="button"
                   className="outliner__op outliner__op--danger"
                   title="Usuń model ze sceny"
                   onClick={() => {
@@ -163,6 +169,7 @@ export function Outliner() {
         }
         return (
           <button
+            type="button"
             key={r.id}
             className={`outliner__row ${selected === r.id ? 'is-selected' : ''}`}
             style={{ paddingLeft: 10 + r.depth * 18 }}

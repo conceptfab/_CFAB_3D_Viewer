@@ -4,12 +4,18 @@
 // No auth required — public, but token-gated.
 // Framing: middleware sends CSP frame-ancestors * for /embed/* (cross-origin iframe OK).
 
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { shareLinks } from '@/lib/scenes/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { getScene } from '@/lib/scenes/repo';
 import { ReadOnlyViewerClient } from '@/components/viewer/ReadOnlyViewerClient';
+
+export const metadata: Metadata = {
+  title: 'Podgląd 3D — CFAB 3D Viewer',
+  robots: { index: false, follow: false },
+};
 
 interface Props {
   params: Promise<{ token: string }>;

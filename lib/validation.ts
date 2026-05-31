@@ -7,18 +7,18 @@ export function normalizeEmail(email: string): string {
 
 /** Schemat żądania kodu logowania. */
 export const requestCodeSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
 });
 
 /** Schemat weryfikacji kodu logowania: e-mail + dokładnie 6 cyfr. */
 export const verifyCodeSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   code: z.string().regex(/^\d{6}$/, 'Kod musi być 6-cyfrową liczbą'),
 });
 
 /** Schemat zaproszenia użytkownika przez admina. */
 export const adminPostSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
 });
 
 /** Schemat patcha użytkownika przez admina — wymagany co najmniej jeden z pól. */

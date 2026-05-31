@@ -34,9 +34,9 @@ export async function GET(request: Request): Promise<NextResponse> {
 const CreateSceneSchema = z.object({
   title: z.string().min(1).max(200),
   config: z.record(z.string(), z.unknown()),   // SceneConfig jako opaque object
-  modelBlobUrl: z.string().url().nullable(),
+  modelBlobUrl: z.url().nullable(),
   modelFileName: z.string().max(255).nullable(),
-  thumbBlobUrl: z.string().url().nullable(),
+  thumbBlobUrl: z.url().nullable(),
   isPreset: z.boolean().optional(),
 });
 

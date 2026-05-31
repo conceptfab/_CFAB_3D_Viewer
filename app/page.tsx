@@ -1,10 +1,15 @@
 // app/page.tsx
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireUser } from '@/lib/auth/session';
 import { listScenes, listAllPresets } from '@/lib/scenes/repo';
 import { SceneGrid } from '@/components/scenes/SceneGrid';
 import { PresetCard } from '@/components/PresetCard';
 import { TopNav } from '@/components/TopNav';
+
+export const metadata: Metadata = {
+  title: 'Moje sceny — CFAB 3D Viewer',
+};
 
 /**
  * Strona startowa zalogowanego użytkownika.
@@ -41,7 +46,7 @@ export default async function HomePage() {
               fontWeight: 700,
               letterSpacing: 1.5,
               textTransform: 'uppercase',
-              color: '#4a6fa5',
+              color: 'var(--muted)',
               margin: '0 0 16px',
             }}
           >
