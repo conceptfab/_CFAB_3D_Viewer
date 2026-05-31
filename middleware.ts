@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/lib/auth/cookie-name';
 
 // Ścieżki chronione — brak cookie → redirect /login.
-const PROTECTED_PATHS = ['/', '/editor', '/admin'];
+const PROTECTED_PATHS = ['/', '/editor', '/admin', '/gallery'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

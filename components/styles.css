@@ -532,6 +532,331 @@ html, body, #root {
 .scene-card-btn--danger:hover:not(:disabled) { background: #fecaca; }
 .scene-card-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Galeria ─────────────────────────────────────────────────────────────── */
+
+.gallery-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.gallery-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1b1c20;
+}
+
+.gallery-empty {
+  text-align: center;
+  padding: 4rem 0;
+  color: #666;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ── SceneCard ───────────────────────────────────────────────────────────── */
+
+.scene-card {
+  border: 1px solid #e0e0e3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.scene-card__thumb-link {
+  display: block;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: #dcdde0;
+}
+
+.scene-card__thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.scene-card__thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.scene-card__body {
+  padding: 0.75rem 1rem 0.25rem;
+}
+
+.scene-card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1b1c20;
+  margin: 0 0 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scene-card__meta {
+  font-size: 0.75rem;
+  color: #888;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scene-card__badge {
+  background: #e8f0fe;
+  color: #1a73e8;
+  padding: 0 0.4rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.scene-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #f0f0f2;
+  flex-wrap: wrap;
+}
+
+/* ── Panele (PermissionsPanel, ShareLinksPanel) ──────────────────────────── */
+
+.panel {
+  padding: 1rem;
+  border-top: 1px solid #f0f0f2;
+  background: #fafafa;
+}
+
+.panel h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.panel__empty {
+  font-size: 0.85rem;
+  color: #999;
+  margin: 0 0 0.75rem;
+}
+
+/* Permissions */
+
+.permissions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.75rem;
+}
+
+.permissions-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f0f0f2;
+  font-size: 0.85rem;
+}
+
+.permissions-list__email {
+  flex: 1;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.permissions-list__role {
+  color: #888;
+  min-width: 54px;
+}
+
+.add-permission-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.error-msg {
+  width: 100%;
+  color: #c62828;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+/* Share links */
+
+.share-links-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.75rem;
+}
+
+.share-links-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f0f0f2;
+  font-size: 0.8rem;
+}
+
+.share-links-list__mode {
+  min-width: 54px;
+  color: #555;
+  font-weight: 600;
+}
+
+.share-links-list__url {
+  flex: 1;
+  background: #f0f0f2;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  color: #333;
+}
+
+.share-links-list__url--revoked {
+  text-decoration: line-through;
+  color: #bbb;
+}
+
+.share-links-list--revoked .share-links-list__item {
+  opacity: 0.6;
+}
+
+.create-link-form {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ── Przyciski ───────────────────────────────────────────────────────────── */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  background: #1b1c20;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.btn-primary:hover { background: #333; }
+
+.btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.85rem;
+  background: #f0f0f2;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.1s;
+}
+
+.btn-sm:hover { background: #e4e4e6; }
+
+.btn-xs {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.55rem;
+  background: #f0f0f2;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.btn-xs:hover { background: #e4e4e6; }
+
+.btn-danger {
+  background: #fce8e8;
+  color: #c62828;
+  border-color: #f0c0c0;
+}
+
+.btn-danger:hover { background: #f8d0d0; }
+
+.input {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.875rem;
+  color: #1b1c20;
+  background: #fff;
+  min-width: 200px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #1b1c20;
+}
+
+.checkbox-label, .radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.revoked-links {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+}
+
+.revoked-links summary {
+  cursor: pointer;
+  color: #888;
+  user-select: none;
+}
+
 /* --- Read-only viewer (public share/embed pages) --- */
 .read-only-viewer {
   position: relative;
