@@ -37,8 +37,13 @@ export function CameraRig() {
     return () => registerCameraApi(null);
   }, [camera, registerCameraApi]);
 
-  // Live fov (z aktywnej kamery) / near / far.
-  const activeFov = cameras.find((c) => c.id === active)?.fov ?? 28;
+  // Aktywna kamera + klucze jej pozycji/celu. Zmiana klucza BEZ zmiany `active`
+  // = edycja presetu w edytorze (przeciągnięcie ikony) → finalny widok śledzi na żywo.
+  const activeCam = cameras.find((c) => c.id === active);
+  const activeFov = activeCam?.fov ?? 28;
+  const posKey = activeCam ? activeCam.position.join(',') : '';
+  const targetKey = activeCam ? activeCam.target.join(',') : '';
+
   useEffect(() => {
     camera.fov = activeFov;
     camera.near = near;
@@ -53,20 +58,36 @@ export function CameraRig() {
     toPos: THREE.Vector3;
     toTarget: THREE.Vector3;
   } | null>(null);
+  const lastActive = useRef<string | null>(null);
 
-  // Tween przy zmianie aktywnej kamery (presety czytamy świeżo, by zapis/gizmo nie tweenował).
+  // Przełączenie aktywnej kamery → płynny tween (700 ms).
+  // Edycja pozycji/celu JUŻ aktywnej kamery (gizmo w edytorze) → natychmiastowy snap,
+  // żeby finalny widok zmieniał się na żywo podczas przeciągania ikony kamery.
   useEffect(() => {
-    if (!controlsRef.current) return;
+    const controls = controlsRef.current;
+    if (!controls) return;
     const view = useStore.getState().config.camera.cameras.find((c) => c.id === active);
     if (!view) return;
-    tween.current = {
-      start: performance.now(),
-      fromPos: camera.position.clone(),
-      fromTarget: controlsRef.current.target.clone(),
-      toPos: new THREE.Vector3(...view.position),
-      toTarget: new THREE.Vector3(...view.target),
-    };
-  }, [active, camera]);
+
+    const switched = lastActive.current !== active;
+    lastActive.current = active;
+
+    if (switched) {
+      tween.current = {
+        start: performance.now(),
+        fromPos: camera.position.clone(),
+        fromTarget: controls.target.clone(),
+        toPos: new THREE.Vector3(...view.position),
+        toTarget: new THREE.Vector3(...view.target),
+      };
+    } else {
+      tween.current = null;
+      camera.position.set(view.position[0], view.position[1], view.position[2]);
+      controls.target.set(view.target[0], view.target[1], view.target[2]);
+      controls.update();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, posKey, targetKey, camera]);
 
   useFrame(() => {
     if (!tween.current || !controlsRef.current) return;
