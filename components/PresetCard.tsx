@@ -37,6 +37,12 @@ export function PresetCard({ preset, isAdmin, onDelete }: PresetCardProps) {
     }
   }
 
+  function handleEdit() {
+    // Otwiera preset w edytorze. Właściciel (admin, który go utworzył) zapisze
+    // zmiany „w miejscu" (PATCH) przyciskiem Zapisz — preset pozostaje presetem.
+    router.push(`/editor/${preset.id}`);
+  }
+
   async function handleDelete() {
     if (!confirm(`Usunąć preset „${preset.title}"? Tej operacji nie można cofnąć.`)) return;
     setLoading(true);
@@ -48,6 +54,7 @@ export function PresetCard({ preset, isAdmin, onDelete }: PresetCardProps) {
         throw new Error(json.error ?? `Błąd ${res.status}`);
       }
       onDelete?.(preset.id);
+      router.refresh(); // odśwież listę na stronie (Server Component) po usunięciu
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Nieznany błąd');
       setLoading(false);
@@ -158,6 +165,28 @@ export function PresetCard({ preset, isAdmin, onDelete }: PresetCardProps) {
           >
             {loading ? '...' : 'Użyj jako nowa scena'}
           </button>
+
+          {/* Edytuj preset — tylko admin (otwiera preset w edytorze) */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={handleEdit}
+              disabled={loading}
+              style={{
+                padding: '6px 10px',
+                background: 'transparent',
+                color: 'var(--accent-2)',
+                border: '1px solid var(--accent-2)',
+                borderRadius: 5,
+                fontSize: 12,
+                cursor: loading ? 'wait' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+              }}
+              aria-label="Edytuj preset"
+            >
+              Edytuj
+            </button>
+          )}
 
           {/* Usuń — tylko admin (gated server-side also) */}
           {isAdmin && (
