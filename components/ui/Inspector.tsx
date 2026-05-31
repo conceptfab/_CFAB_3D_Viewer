@@ -15,7 +15,7 @@ import { MODEL_CATALOG } from '../models/catalog';
 
 const TONE_OPTIONS: ToneMode[] = ['NEUTRAL', 'ACES_FILMIC', 'AGX', 'REINHARD'];
 const GIZMO_MODES: GizmoMode[] = ['translate', 'rotate', 'scale'];
-const AIM_MODES: AimGizmoMode[] = ['translate', 'rotate', 'target'];
+const AIM_MODES: AimGizmoMode[] = ['translate', 'rotate'];
 const AA_OPTIONS: Record<string, AntialiasingMode> = {
   'Wyłącz': 'OFF',
   FXAA: 'FXAA',
@@ -368,14 +368,71 @@ function CameraControlsInner({
   return null;
 }
 
+/* --- Target kamery (węzeł „Target" pod kamerą w outlinerze) --- */
+function CameraTargetControls({ id }: { id: string }) {
+  const cam = useStore.getState().config.camera.cameras.find((c) => c.id === id);
+  const [, set] = useControls(
+    `Target kamery: ${id}`,
+    () => ({
+      target: {
+        value: cam?.target ?? ([0, 0, 0] as Vec3),
+        step: 0.05,
+        onChange: (v: [number, number, number]) =>
+          useStore.getState().updateCamera(id, { target: v }),
+      },
+    }),
+    [id]
+  );
+  // Store → leva: przeciągnięcie uchwytu targetu w viewporcie aktualizuje pola.
+  useEffect(
+    () =>
+      useStore.subscribe((s, prev) => {
+        const cur = s.config.camera.cameras.find((x) => x.id === id);
+        const old = prev.config.camera.cameras.find((x) => x.id === id);
+        if (!cur || cur.target === old?.target) return;
+        set({ target: cur.target });
+      }),
+    [id, set]
+  );
+  return null;
+}
+
+/* --- Target Key Lighta (węzeł „Target" pod światłem w outlinerze) --- */
+function LightTargetControls() {
+  const t = useStore.getState().config.keyLight.target;
+  const [, set] = useControls(
+    'Target światła',
+    () => ({
+      target: {
+        value: t,
+        step: 0.05,
+        onChange: (v: [number, number, number]) =>
+          useStore.getState().setKeyLight({ target: v }),
+      },
+    }),
+    []
+  );
+  useEffect(
+    () =>
+      useStore.subscribe((s, prev) => {
+        if (s.config.keyLight.target === prev.config.keyLight.target) return;
+        set({ target: s.config.keyLight.target });
+      }),
+    [set]
+  );
+  return null;
+}
+
 /** Inspektor kontekstowy — panel adekwatny do zaznaczonego elementu outlinera. */
 const PANEL_IDS = ['render', 'background', 'environment', 'branding', 'hero', 'actor', 'light'];
 
 export function Inspector() {
   const selected = useStore((s) => s.selected);
   const camId = selected.startsWith('cam:') ? selected.slice(4) : null;
+  const camTgtId = selected.startsWith('camtgt:') ? selected.slice(7) : null;
+  const isLightTgt = selected === 'lighttgt';
   // Nic / nierozpoznane zaznaczenie → parametry sceny (jak 'scene').
-  const showScene = !camId && !PANEL_IDS.includes(selected);
+  const showScene = !camId && !camTgtId && !isLightTgt && !PANEL_IDS.includes(selected);
   return (
     <div className="inspector">
       {showScene && <SceneControls />}
@@ -386,7 +443,9 @@ export function Inspector() {
       {selected === 'hero' && <HeroControls />}
       {selected === 'actor' && <ActorNote />}
       {selected === 'light' && <LightControls />}
+      {isLightTgt && <LightTargetControls />}
       {camId && <CameraControls key={camId} id={camId} />}
+      {camTgtId && <CameraTargetControls key={`tgt-${camTgtId}`} id={camTgtId} />}
       <div className="inspector__panel">
         <Leva fill flat titleBar={false} />
       </div>

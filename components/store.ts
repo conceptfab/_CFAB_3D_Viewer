@@ -38,8 +38,9 @@ export type BrandingMode = 'text' | 'image';
 /** Tryb gizmo dla HERO NULL. */
 export type GizmoMode = 'translate' | 'rotate' | 'scale';
 
-/** Tryb gizmo dla kamer i świateł (aim = celowanie przez target). */
-export type AimGizmoMode = 'translate' | 'rotate' | 'target';
+/** Tryb gizmo CIAŁA kamery/światła. Target edytuje się przez osobny węzeł
+ *  „Target" w outlinerze (zaznaczenie → uchwyt + pola X/Y/Z), nie przez ten tryb. */
+export type AimGizmoMode = 'translate' | 'rotate';
 
 export type Vec3 = [number, number, number];
 

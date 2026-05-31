@@ -51,6 +51,7 @@ export function Outliner() {
 
   rows.push({ kind: 'section', label: 'Światła' });
   rows.push({ kind: 'item', id: 'light', label: 'Key Light', icon: '💡', depth: 1 });
+  rows.push({ kind: 'item', id: 'lighttgt', label: 'Target', icon: '🎯', depth: 2, hint: 'cel' });
 
   rows.push({ kind: 'section', label: 'Kamery' });
   cameras.forEach((c, i) => {
@@ -64,6 +65,7 @@ export function Outliner() {
       canDown: i < cameras.length - 1,
       canRemove: cameras.length > 1,
     });
+    rows.push({ kind: 'item', id: `camtgt:${c.id}`, label: 'Target', icon: '🎯', depth: 2, hint: 'cel' });
   });
   rows.push({ kind: 'add-camera' });
 

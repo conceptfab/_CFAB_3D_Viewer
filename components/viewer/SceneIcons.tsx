@@ -9,6 +9,7 @@ function CameraIcon({ id }: { id: string }) {
   const cam = useStore((s) => s.config.camera.cameras.find((c) => c.id === id));
   const active = useStore((s) => s.config.camera.active) === id;
   const selected = useStore((s) => s.selected) === `cam:${id}`;
+  const targetSelected = useStore((s) => s.selected) === `camtgt:${id}`;
   const mode = useStore((s) => s.aimGizmoMode);
   const setSelected = useStore((s) => s.setSelected);
   const [grp, setGrp] = useState<THREE.Group | null>(null);
@@ -29,7 +30,7 @@ function CameraIcon({ id }: { id: string }) {
   }, [tgt, cam]);
 
   if (!cam) return null;
-  const color = selected ? '#4da3ff' : active ? '#74d18b' : '#9aa0ab';
+  const color = selected || targetSelected ? '#4da3ff' : active ? '#74d18b' : '#9aa0ab';
 
   const writePos = () => {
     if (!grp) return;
@@ -76,7 +77,7 @@ function CameraIcon({ id }: { id: string }) {
       </group>
 
       {/* Move / Rotate gizmo on the camera body */}
-      {grp && selected && mode !== 'target' && (
+      {grp && selected && (
         <TransformControls
           object={grp}
           mode={mode === 'rotate' ? 'rotate' : 'translate'}
@@ -91,18 +92,19 @@ function CameraIcon({ id }: { id: string }) {
         />
       )}
 
-      {/* Target handle + translate gizmo */}
-      {selected && mode === 'target' && (
+      {/* Target handle + translate gizmo — shown when the camera's Target node
+          is selected in the outliner (selected === `camtgt:<id>`). */}
+      {targetSelected && (
         <>
           <mesh ref={setTgt} position={cam.target}>
-            <sphereGeometry args={[0.05, 16, 16]} />
+            <sphereGeometry args={[0.07, 16, 16]} />
             <meshBasicMaterial color="#4da3ff" toneMapped={false} />
           </mesh>
           {tgt && (
             <TransformControls
               object={tgt}
               mode="translate"
-              size={0.3}
+              size={0.5}
               onMouseDown={() => (dragging.current = true)}
               onMouseUp={() => {
                 dragging.current = false;
