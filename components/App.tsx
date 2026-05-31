@@ -77,6 +77,7 @@ export default function App({
                 type="button"
                 onClick={() => setShareOpen(true)}
                 className="icon-btn"
+                // title = verbose tooltip; aria-label = concise accessible name
                 title="Link publiczny / embed do tej sceny"
                 aria-label="Link publiczny"
               >

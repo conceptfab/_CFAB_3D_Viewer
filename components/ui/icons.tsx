@@ -1,5 +1,7 @@
 import type { SVGProps } from 'react';
 
+// Shared SVG attributes. Each component spreads `{...base} {...props}` (base
+// FIRST) so a caller can override any default, e.g. aria-hidden={false}.
 const base: SVGProps<SVGSVGElement> = {
   width: 16,
   height: 16,
