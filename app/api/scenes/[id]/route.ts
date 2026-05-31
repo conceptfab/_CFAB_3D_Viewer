@@ -98,7 +98,17 @@ export async function DELETE(_req: Request, ctx: Ctx): Promise<NextResponse> {
   if (!scene) {
     return NextResponse.json({ error: 'Nie znaleziono sceny' }, { status: 404 });
   }
-  if (scene.ownerId !== user.id) {
+
+  // Presety może usuwać tylko admin
+  if (scene.isPreset) {
+    if (user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Tylko administrator może usuwać presety' },
+        { status: 403 }
+      );
+    }
+  } else if (scene.ownerId !== user.id) {
+    // Zwykłe sceny: tylko właściciel
     return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 });
   }
 
