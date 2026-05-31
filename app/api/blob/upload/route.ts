@@ -2,6 +2,7 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth/session';
+import { MAX_MODEL_BYTES, MAX_THUMB_BYTES } from '@/lib/blob/limits';
 
 /**
  * Token route dla @vercel/blob/client.
@@ -35,7 +36,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           // Maksymalny rozmiar: 1 GB dla modeli (duże .glb), 5 MB dla miniatur.
           // Uwaga: modele >100 MB ładują się wolno w przeglądarce i mocno zużywają
           // transfer/Blob — warto je kompresować (Draco / meshopt / gltfpack).
-          maximumSizeInBytes: pathname.startsWith('models/') ? 1_000_000_000 : 5_000_000,
+          maximumSizeInBytes: pathname.startsWith('models/') ? MAX_MODEL_BYTES : MAX_THUMB_BYTES,
           tokenPayload: JSON.stringify({ userId: user.id }),
         };
       },

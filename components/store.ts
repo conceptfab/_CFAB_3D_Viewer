@@ -211,6 +211,8 @@ interface State {
   removeCamera: (id: string) => void;
 
   setLoadedModel: (model: LoadedModel | null) => void;
+  /** Usuwa model ze sceny (zwalnia blob: objectUrl jeśli był z dysku). */
+  removeModel: () => void;
   setModelSize: (size: Vec3) => void;
   registerCameraApi: (api: CameraApi | null) => void;
 
@@ -356,6 +358,12 @@ export const useStore = create<State>((set) => ({
     }),
 
   setLoadedModel: (loadedModel) => set({ loadedModel }),
+  removeModel: () =>
+    set((s) => {
+      const url = s.loadedModel?.objectUrl;
+      if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
+      return { loadedModel: null };
+    }),
   setModelSize: (modelSize) => set({ modelSize }),
   registerCameraApi: (cameraApi) => set({ cameraApi }),
 

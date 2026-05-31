@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
+import { MAX_MODEL_BYTES } from '@/lib/blob/limits';
 
 /**
  * Overlay nad canvasem: hint pustego stanu + ukryty input pliku. Drag&drop jest
@@ -21,6 +22,16 @@ export function ModelDropzone() {
       if (!name.endsWith('.glb')) {
         // v1: tylko single-file .glb
         alert('v1 obsługuje tylko pliki .glb (single-file).');
+        return;
+      }
+      // Limit rozmiaru sprawdzany TU (przed wczytaniem), bo jest twardy —
+      // nie ma sensu wczytywać sceny, której i tak nie da się zapisać.
+      if (file.size > MAX_MODEL_BYTES) {
+        const mb = (n: number) => Math.round(n / 1_000_000);
+        alert(
+          `Plik „${file.name}" ma ${mb(file.size)} MB i przekracza limit ${mb(MAX_MODEL_BYTES)} MB.\n` +
+            'Skompresuj model (Draco / meshopt / gltfpack) i wczytaj ponownie.'
+        );
         return;
       }
       if (prevUrl.current) URL.revokeObjectURL(prevUrl.current);

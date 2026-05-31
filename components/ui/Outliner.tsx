@@ -32,6 +32,7 @@ export function Outliner() {
   const moveCamera = useStore((s) => s.moveCamera);
   const removeCamera = useStore((s) => s.removeCamera);
   const addCamera = useStore((s) => s.addCamera);
+  const removeModel = useStore((s) => s.removeModel);
 
   const rows: Row[] = [
     { kind: 'section', label: 'Świat' },
@@ -132,7 +133,34 @@ export function Outliner() {
             </div>
           );
         }
-        // r.kind === 'item'
+        // r.kind === 'item' — aktor (model) dostaje przycisk usunięcia (✕)
+        if (r.id === 'actor') {
+          return (
+            <div
+              key={r.id}
+              className={`outliner__row outliner__row--camera ${selected === 'actor' ? 'is-selected' : ''}`}
+              style={{ paddingLeft: 10 + r.depth * 18 }}
+            >
+              <button className="outliner__main" onClick={() => setSelected('actor')}>
+                <span className="outliner__icon">{r.icon}</span>
+                <span className="outliner__label">{r.label}</span>
+                {r.hint && <span className="outliner__hint">{r.hint}</span>}
+              </button>
+              <div className="outliner__ops">
+                <button
+                  className="outliner__op outliner__op--danger"
+                  title="Usuń model ze sceny"
+                  onClick={() => {
+                    removeModel();
+                    if (selected === 'actor') setSelected('hero');
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          );
+        }
         return (
           <button
             key={r.id}

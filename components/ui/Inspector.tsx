@@ -176,11 +176,26 @@ function HeroControls() {
 
 function ActorNote() {
   const name = useStore((s) => s.loadedModel?.fileName);
+  const removeModel = useStore((s) => s.removeModel);
+  const setSelected = useStore((s) => s.setSelected);
   return (
     <div className="inspector-note">
       Aktor: <b>{name ?? '—'}</b>
       <br />
       Transform zablokowany — edytuj <b>HERO</b>.
+      {name && (
+        <button
+          type="button"
+          className="save-scene-btn"
+          style={{ marginTop: 10, display: 'block', width: '100%' }}
+          onClick={() => {
+            removeModel();
+            setSelected('hero');
+          }}
+        >
+          Usuń model ze sceny
+        </button>
+      )}
     </div>
   );
 }
