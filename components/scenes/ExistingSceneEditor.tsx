@@ -3,7 +3,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect } from 'react';
-import { useStore } from '@/components/store';
+import { useStore, normalizeConfig } from '@/components/store';
 import type { SceneRecord } from '@/lib/scenes/types';
 
 // Dynamiczny import edytora (ssr: false) — jak app/editor/page.tsx.
@@ -26,7 +26,7 @@ export function ExistingSceneEditor({ scene, isAdmin = false, isOwner = false }:
   const rawSet = useStore.setState;
 
   useEffect(() => {
-    rawSet({ config: scene.config });
+    rawSet({ config: normalizeConfig(scene.config) });
     if (scene.modelBlobUrl) {
       setLoadedModel({
         objectUrl: scene.modelBlobUrl, // useGLTF akceptuje HTTPS URL
