@@ -15,6 +15,13 @@
       "when": 1780179347562,
       "tag": "0001_magical_terror",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780215911824,
+      "tag": "0002_etap_d_permissions",
+      "breakpoints": true
     }
   ]
 }
