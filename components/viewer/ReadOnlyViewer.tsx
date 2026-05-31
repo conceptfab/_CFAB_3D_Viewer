@@ -19,6 +19,7 @@ import { CameraRig } from '@/components/viewer/CameraRig';
 import { Postprocess } from '@/components/viewer/Postprocess';
 import { Branding } from '@/components/ui/Branding';
 import { CameraButtons } from '@/components/ui/CameraButtons';
+import { SceneProgress } from '@/components/viewer/SceneProgress';
 
 export interface ReadOnlyViewerProps {
   config: SceneConfig;
@@ -72,6 +73,7 @@ export function ReadOnlyViewer({ config, modelUrl }: ReadOnlyViewerProps) {
     <div className="read-only-viewer">
       {/* Branding badge — top-left, identical to final-view in the editor */}
       <Branding />
+      <SceneProgress />
 
       <Canvas
         shadows
