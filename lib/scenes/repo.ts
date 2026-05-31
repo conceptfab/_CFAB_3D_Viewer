@@ -1,8 +1,8 @@
 // lib/scenes/repo.ts
-import { eq, and, ne } from 'drizzle-orm';
+import { eq, and, ne, inArray, desc, or } from 'drizzle-orm';
 import { del } from '@vercel/blob';
 import { db } from '@/lib/db';
-import { scenes } from './schema';
+import { scenes, scenePermissions } from './schema';
 import type { SceneRecord, CreateSceneInput, UpdateSceneInput } from './types';
 
 // Re-eksport typów domeny scen — by można je importować także z `@/lib/scenes/repo`
@@ -198,6 +198,34 @@ export async function instantiatePreset(
     .returning();
 
   return rowToRecord(inserted);
+}
+
+// ─── Etap D ──────────────────────────────────────────────────────────────────
+
+/**
+ * Zwraca wszystkie sceny, do których user ma dostęp:
+ * własne (owner_id = userId) + udostępnione mu przez scene_permissions.
+ * Sortowanie: updatedAt DESC.
+ */
+export async function listAccessible(userId: string): Promise<SceneRecord[]> {
+  // Podzapytanie: sceneId, gdzie userId ma uprawnienie
+  const permittedSceneIds = db
+    .select({ sceneId: scenePermissions.sceneId })
+    .from(scenePermissions)
+    .where(eq(scenePermissions.userId, userId));
+
+  const rows = await db
+    .select()
+    .from(scenes)
+    .where(
+      or(
+        eq(scenes.ownerId, userId),
+        inArray(scenes.id, permittedSceneIds),
+      ),
+    )
+    .orderBy(desc(scenes.updatedAt));
+
+  return rows.map(rowToRecord);
 }
 
 // ─── Mapper ────────────────────────────────────────────────────────────────
