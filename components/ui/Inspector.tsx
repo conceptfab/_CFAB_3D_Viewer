@@ -233,15 +233,18 @@ function LightControls() {
     shadowBias: { value: k.shadowBias, min: -0.001, max: 0.001, step: 0.00001, onChange: (v: number) => useStore.getState().setKeyLight({ shadowBias: v }) },
   }), []);
 
-  // Store → leva (gizmo updates position/target).
-  useEffect(
-    () =>
-      useStore.subscribe((s, prev) => {
-        if (s.config.keyLight === prev.config.keyLight) return;
+  // Store → leva. `aimGizmoMode` is shared with the camera panel, and leva
+  // retains a stale per-path value across panel remounts — so sync it from the
+  // store on mount AND on change. Also mirror gizmo edits to position/target.
+  useEffect(() => {
+    set({ 'tryb gizmo': useStore.getState().aimGizmoMode });
+    return useStore.subscribe((s, prev) => {
+      if (s.aimGizmoMode !== prev.aimGizmoMode) set({ 'tryb gizmo': s.aimGizmoMode });
+      if (s.config.keyLight !== prev.config.keyLight) {
         set({ pozycja: s.config.keyLight.position, target: s.config.keyLight.target });
-      }),
-    [set]
-  );
+      }
+    });
+  }, [set]);
   return null;
 }
 
@@ -340,13 +343,16 @@ function CameraControlsInner({
     []
   );
 
-  // Store → leva (gizmo / zapis widoku / rename z outlinera).
-  useEffect(
-    () =>
-      useStore.subscribe((s, prev) => {
-        const cur = s.config.camera.cameras.find((x) => x.id === id);
-        const old = prev.config.camera.cameras.find((x) => x.id === id);
-        if (!cur || cur === old) return;
+  // Store → leva (gizmo / zapis widoku / rename z outlinera). `aimGizmoMode` is
+  // shared with the light panel and leva keeps a stale per-path value across
+  // remounts — sync it from the store on mount AND on change.
+  useEffect(() => {
+    set({ 'tryb gizmo': useStore.getState().aimGizmoMode });
+    return useStore.subscribe((s, prev) => {
+      if (s.aimGizmoMode !== prev.aimGizmoMode) set({ 'tryb gizmo': s.aimGizmoMode });
+      const cur = s.config.camera.cameras.find((x) => x.id === id);
+      const old = prev.config.camera.cameras.find((x) => x.id === id);
+      if (cur && cur !== old) {
         set({
           nazwa: cur.name,
           'pokaż w finalnym widoku': cur.showInFinalBar,
@@ -354,7 +360,9 @@ function CameraControlsInner({
           target: cur.target,
           fov: cur.fov,
         });
-      }),
+      }
+    });
+  },
     [id, set]
   );
   return null;
