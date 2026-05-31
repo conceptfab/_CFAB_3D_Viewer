@@ -25,23 +25,22 @@ export function Postprocess() {
   const aa = useStore((s) => s.config.antialiasing);
   const smaaPreset = smaaPresetFor(aa);
 
-  // `key={aa}` forces a clean composer rebuild when the AA effect set changes,
-  // avoiding stale-effect refs. multisampling stays 0 — MSAA on the composer
-  // crashes WebGL (see commit 3771325); AA is post-process only.
+  // NO `key` on EffectComposer: remounting the whole composer on every AA change
+  // reallocates render targets and recompiles ALL passes — a 200ms+ main-thread
+  // block (bad INP). Instead the composer + Exposure + ToneMapping stay mounted
+  // and only the AA effect is swapped. `key` on the AA effect (by mode/preset)
+  // makes a change recreate just that effect so the new setting applies, while
+  // a stable key on Exposure/ToneMapping keeps them (and the render targets) put.
+  // multisampling stays 0 — MSAA on the composer crashes WebGL (commit 3771325).
   //
-  // EffectComposer.children: JSX.Element | JSX.Element[] — no nulls allowed.
-  // We always have at least Exposure + ToneMapping; the AA slot is appended
-  // only when an AA mode is active, keeping the array non-empty.
+  // EffectComposer.children: JSX.Element | JSX.Element[] — no nulls allowed, so
+  // the AA slot is appended only when an AA mode is active (array never empty).
   const effects: JSX.Element[] = [
     <Exposure key="exposure" value={exposure} />,
     <ToneMapping key="tone" mode={TONE_MODE[mode]} />,
   ];
   if (aa === 'FXAA') effects.push(<FXAA key="fxaa" />);
-  else if (smaaPreset !== null) effects.push(<SMAA key="smaa" preset={smaaPreset} />);
+  else if (smaaPreset !== null) effects.push(<SMAA key={`smaa-${smaaPreset}`} preset={smaaPreset} />);
 
-  return (
-    <EffectComposer key={aa} multisampling={0}>
-      {effects}
-    </EffectComposer>
-  );
+  return <EffectComposer multisampling={0}>{effects}</EffectComposer>;
 }
