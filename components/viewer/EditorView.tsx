@@ -1,5 +1,5 @@
 'use client';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import {
   OrbitControls,
@@ -8,6 +8,7 @@ import {
   GizmoHelper,
   GizmoViewcube,
 } from '@react-three/drei';
+import * as THREE from 'three';
 import { Product } from './Product';
 import { Gizmos } from './Gizmos';
 import { SceneIcons } from './SceneIcons';
@@ -26,18 +27,28 @@ const ORTHO_DIR: Record<
   left: [-1, 0, 0],
 };
 
-/** Światło kierunkowe odzwierciedlające key-light ze sceny (żeby edycja była widoczna). */
 function EditorLights() {
   const key = useStore((s) => s.config.keyLight);
+  const lightRef = useRef<THREE.DirectionalLight>(null);
+  const targetRef = useRef<THREE.Object3D>(null);
+
+  useEffect(() => {
+    if (lightRef.current && targetRef.current) {
+      lightRef.current.target = targetRef.current;
+    }
+  }, []);
+
   return (
     <>
       <ambientLight intensity={0.55} />
       <hemisphereLight args={['#ffffff', '#3a3d46', 0.6]} />
       <directionalLight
+        ref={lightRef}
         position={key.position}
         intensity={Math.max(key.intensity, 0.6)}
         color={key.color}
       />
+      <object3D ref={targetRef} position={key.target} />
     </>
   );
 }

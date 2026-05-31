@@ -1,5 +1,5 @@
 'use client';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Environment, SoftShadows } from '@react-three/drei';
 import { useStore } from '../store';
@@ -33,6 +33,15 @@ export function Studio() {
   const key = useStore((s) => s.config.keyLight);
   const shadows = useStore((s) => s.config.shadows);
   const [sx, sy, sz] = useStore((s) => s.modelSize);
+  const keyTarget = useStore((s) => s.config.keyLight.target);
+  const lightRef = useRef<THREE.DirectionalLight>(null);
+  const targetRef = useRef<THREE.Object3D>(null);
+
+  useEffect(() => {
+    if (lightRef.current && targetRef.current) {
+      lightRef.current.target = targetRef.current;
+    }
+  }, []);
 
   // Regeneracja tła tylko przy zmianie stopni/centerY.
   const background = useMemo(
@@ -57,6 +66,7 @@ export function Studio() {
       />
 
       <directionalLight
+        ref={lightRef}
         position={key.position}
         intensity={key.intensity}
         color={key.color}
@@ -70,6 +80,9 @@ export function Studio() {
           args={[-frustum, frustum, frustum, -frustum, 0.1, frustum * 6 + 10]}
         />
       </directionalLight>
+
+      {/* Aim point for the directional light (position → target). */}
+      <object3D ref={targetRef} position={keyTarget} />
 
       <mesh rotation-x={-Math.PI / 2} position-y={0} receiveShadow>
         <planeGeometry args={[60, 60]} />
