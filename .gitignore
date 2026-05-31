@@ -41,3 +41,7 @@ pnpm-debug.log*
 # Vercel
 .vercel
 .env*
+
+# Stray model files at repo root (e.g. METRO.glb dropped in for testing).
+# Intended demo models live under public/models/ and stay tracked.
+/*.glb
