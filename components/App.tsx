@@ -14,6 +14,7 @@ import { ShareDialog } from './scenes/ShareDialog';
 import { IconSave, IconSaveAs, IconPreset, IconLink } from './ui/icons';
 import { useStore } from './store';
 import { updateSceneInPlace } from './scenes/updateScene';
+import { SceneProgress } from './viewer/SceneProgress';
 
 export default function App({
   isAdmin = false,
@@ -30,6 +31,8 @@ export default function App({
   const [shareOpen, setShareOpen] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
   const [toast, setToast] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+  const modelError = useStore((s) => s.modelError);
+  const setModelError = useStore((s) => s.setModelError);
 
   // Auto-ukryj potwierdzenie sukcesu; błędy zostają do następnej akcji.
   useEffect(() => {
@@ -64,6 +67,7 @@ export default function App({
       <main className="viewer">
         <Branding />
         <Viewer />
+        <SceneProgress />
         <CameraButtons />
         <ModelDropzone />
       </main>
@@ -153,6 +157,21 @@ export default function App({
       {toast && (
         <div className={`save-toast save-toast--${toast.kind}`} role="status">
           {toast.text}
+        </div>
+      )}
+
+      {modelError && (
+        <div className="model-error" role="alert">
+          <strong>Nie udało się wczytać modelu</strong>
+          <span className="model-error__msg">{modelError}</span>
+          <span className="model-error__hint">
+            Sprawdź, czy plik .glb nie jest uszkodzony. Obsługiwane są pliki
+            skompresowane Draco i meshopt; tekstury KTX2 / Basis nie są jeszcze
+            wspierane.
+          </span>
+          <button type="button" onClick={() => setModelError(null)}>
+            OK
+          </button>
         </div>
       )}
     </div>

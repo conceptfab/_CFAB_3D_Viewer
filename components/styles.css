@@ -473,6 +473,46 @@ html, body, #root {
 .save-toast--ok { background: var(--ok, #34d399); color: #08110c; }
 .save-toast--err { background: var(--danger, #f87171); color: #2a0a0a; }
 
+/* --- Model load error overlay --- */
+.model-error {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 440px;
+  padding: 18px 20px;
+  background: var(--surface-2, #1e2028);
+  border: 1px solid var(--danger-border, rgba(248, 113, 113, 0.4));
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  color: var(--ink, #eceef2);
+  font-family: Inter, system-ui, sans-serif;
+}
+.model-error strong { color: var(--danger, #f87171); font-size: 14px; }
+.model-error__msg {
+  font-size: 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--muted, #a0a4ae);
+  word-break: break-word;
+}
+.model-error__hint { font-size: 11px; color: var(--faint, #6f747e); line-height: 1.4; }
+.model-error button {
+  align-self: flex-end;
+  margin-top: 4px;
+  padding: 5px 16px;
+  background: var(--accent, #7c3aed);
+  color: var(--accent-ink, #fff);
+  border: none;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* --- Save Scene dialog overlay --- */
 .save-scene-overlay {
   position: fixed;

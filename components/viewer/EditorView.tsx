@@ -12,6 +12,7 @@ import * as THREE from 'three';
 import { Product } from './Product';
 import { Gizmos } from './Gizmos';
 import { SceneIcons } from './SceneIcons';
+import { ModelErrorBoundary } from './ModelErrorBoundary';
 import { useStore, type EditorView as EditorViewId, type Vec3 } from '../store';
 
 /** Kierunki kamery dla rzutów ortograficznych (od strony osi w stronę środka). */
@@ -116,6 +117,8 @@ function EditorRig({ view }: { view: EditorViewId }) {
 /** Środkowy, uproszczony viewport edycyjny: płaskie oświetlenie + grid + gizmo. */
 export function EditorView() {
   const view = useStore((s) => s.editorView);
+  const modelUrl = useStore((s) => s.loadedModel?.objectUrl);
+  const setModelError = useStore((s) => s.setModelError);
   return (
     <Canvas dpr={[1, 2]} gl={{ antialias: true }} frameloop="always">
       <color attach="background" args={['#202227']} />
@@ -123,7 +126,9 @@ export function EditorView() {
       <EditorLights />
 
       <Suspense fallback={null}>
-        <Product interactive />
+        <ModelErrorBoundary key={modelUrl ?? 'none'} onError={setModelError}>
+          <Product interactive />
+        </ModelErrorBoundary>
       </Suspense>
 
       <gridHelper args={[20, 40, '#454853', '#2c2e35']} />

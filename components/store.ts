@@ -229,6 +229,11 @@ interface State {
   modelSize: Vec3;
   cameraApi: CameraApi | null;
 
+  /** Komunikat błędu wczytania modelu (np. uszkodzony/nieobsługiwany .glb).
+   *  null = brak błędu. Pokazywany użytkownikowi (nakładka), nie tylko w konsoli. */
+  modelError: string | null;
+  setModelError: (msg: string | null) => void;
+
   // Stan edytora (NIE część serializowanego configu).
   editorView: EditorView;
   setEditorView: (v: EditorView) => void;
@@ -278,6 +283,9 @@ export const useStore = create<State>((set) => ({
   modelSize: [1, 1.4, 1],
   cameraApi: null,
   glRef: null,
+
+  modelError: null,
+  setModelError: (modelError) => set({ modelError }),
 
   editorView: 'perspective',
   setEditorView: (editorView) => set({ editorView }),
@@ -412,12 +420,13 @@ export const useStore = create<State>((set) => ({
       };
     }),
 
-  setLoadedModel: (loadedModel) => set({ loadedModel }),
+  // Nowy model → kasujemy poprzedni błąd (świeża próba wczytania).
+  setLoadedModel: (loadedModel) => set({ loadedModel, modelError: null }),
   removeModel: () =>
     set((s) => {
       const url = s.loadedModel?.objectUrl;
       if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
-      return { loadedModel: null };
+      return { loadedModel: null, modelError: null };
     }),
   setModelSize: (modelSize) => set({ modelSize }),
   registerCameraApi: (cameraApi) => set({ cameraApi }),

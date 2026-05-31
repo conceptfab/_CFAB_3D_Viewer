@@ -6,12 +6,15 @@ import { Studio } from './Studio';
 import { Product } from './Product';
 import { CameraRig } from './CameraRig';
 import { Postprocess } from './Postprocess';
+import { ModelErrorBoundary } from './ModelErrorBoundary';
 import { DEFAULT_CONFIG, useStore } from '../store';
 
 export function Viewer() {
   const cam = DEFAULT_CONFIG.camera;
   const initialFov = cam.cameras.find((c) => c.id === cam.active)?.fov ?? 28;
   const setGlRef = useStore((s) => s.setGlRef);
+  const modelUrl = useStore((s) => s.loadedModel?.objectUrl);
+  const setModelError = useStore((s) => s.setModelError);
   return (
     <Canvas
       shadows
@@ -32,7 +35,9 @@ export function Viewer() {
     >
       <Suspense fallback={null}>
         <Studio />
-        <Product />
+        <ModelErrorBoundary key={modelUrl ?? 'none'} onError={setModelError}>
+          <Product />
+        </ModelErrorBoundary>
       </Suspense>
 
       <CameraRig />
