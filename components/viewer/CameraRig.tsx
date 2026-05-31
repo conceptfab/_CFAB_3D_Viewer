@@ -1,10 +1,11 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { useStore } from '../store';
+import { fitOrbitLimits } from '@/lib/viewer/orbitLimits';
 
 const TWEEN_MS = 700;
 
@@ -99,15 +100,27 @@ export function CameraRig() {
     if (t >= 1) tween.current = null;
   });
 
+  // OrbitControls re-clamps the camera to its distance/polar limits on every
+  // update() (damping runs update() each frame). An authored camera whose pose
+  // sits outside the base limits — a far shot, or a steep look-up/down beyond
+  // min/maxPolar — would be silently pulled to the nearest allowed pose, so the
+  // final view would NOT match the editor's (unconstrained) camera view.
+  // Widen the limits to contain every authored camera: manual orbit stays
+  // bounded, but no preset is ever clamped. See lib/viewer/orbitLimits.ts.
+  const limits = useMemo(
+    () => fitOrbitLimits(orbit, cameras),
+    [orbit, cameras]
+  );
+
   return (
     <OrbitControls
       ref={controlsRef}
       enableDamping
       dampingFactor={orbit.damping}
-      minDistance={orbit.minDist}
-      maxDistance={orbit.maxDist}
-      minPolarAngle={orbit.minPolar}
-      maxPolarAngle={orbit.maxPolar}
+      minDistance={limits.minDistance}
+      maxDistance={limits.maxDistance}
+      minPolarAngle={limits.minPolarAngle}
+      maxPolarAngle={limits.maxPolarAngle}
       makeDefault
     />
   );
