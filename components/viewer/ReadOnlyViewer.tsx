@@ -9,7 +9,7 @@
 import { Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useStore } from '@/components/store';
+import { useStore, normalizeConfig } from '@/components/store';
 import type { SceneConfig } from '@/components/store';
 
 // Render-only components — same as the full editor viewer, minus anything editing.
@@ -36,38 +36,33 @@ export interface ReadOnlyViewerProps {
  * only runs in the browser.
  */
 export function ReadOnlyViewer({ config, modelUrl }: ReadOnlyViewerProps) {
+  // Normalize so scenes saved before newer fields existed get valid defaults.
+  const cfg = useMemo(() => normalizeConfig(config), [config]);
+
   // Initialise the global store synchronously before the first render.
-  // useMemo with an empty dep-array fires exactly once per mount.
   useMemo(() => {
     const store = useStore.getState();
+    store.setEnv(cfg.environment);
+    store.setBackground(cfg.background);
+    store.setKeyLight(cfg.keyLight);
+    store.setShadows(cfg.shadows);
+    store.setTone(cfg.tone);
+    store.setMaterial(cfg.material);
+    store.setBranding(cfg.branding);
+    store.setHero(cfg.hero);
+    store.setAntialiasing(cfg.antialiasing);
 
-    // Push the full scene config into the store.
-    store.setEnv(config.environment);
-    store.setBackground(config.background);
-    store.setKeyLight(config.keyLight);
-    store.setShadows(config.shadows);
-    store.setTone(config.tone);
-    store.setMaterial(config.material);
-    store.setBranding(config.branding);
-    store.setHero(config.hero);
-
-    // Patch camera (including orbit settings + cameras array) in one setState
-    // so CameraRig reads the correct preset list immediately.
     useStore.setState((s) => ({
-      config: {
-        ...s.config,
-        camera: { ...config.camera },
-      },
+      config: { ...s.config, camera: { ...cfg.camera } },
     }));
 
-    // Load the model from its Blob URL (no File object — view-only).
     if (modelUrl) {
       store.setLoadedModel({ objectUrl: modelUrl, fileName: '', file: null });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const cam = config.camera;
+  const cam = cfg.camera;
   const initialFov = cam.cameras.find((c) => c.id === cam.active)?.fov ?? 28;
 
   return (
