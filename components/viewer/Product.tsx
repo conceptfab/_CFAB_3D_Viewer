@@ -55,6 +55,12 @@ function Actor({ url }: { url: string }) {
     const size = box.getSize(new THREE.Vector3());
     const scale = size.y > 0 ? 1.4 / size.y : 1;
     group.scale.setScalar(scale);
+    // Propagate the new scale into world matrices BEFORE re-measuring — otherwise
+    // box2 (and thus modelSize) keeps the RAW, unscaled bounds. For a model in mm
+    // (e.g. 300+ units tall) that makes the editor camera frame ~1000 units away,
+    // so the auto-fit model is an invisible speck and the final camera sits inside
+    // it. updateWorldMatrix(true,true) fixes both the centering and modelSize.
+    group.updateWorldMatrix(true, true);
     const box2 = new THREE.Box3().setFromObject(cloned);
     const center2 = box2.getCenter(new THREE.Vector3());
     group.position.x = -center2.x;
