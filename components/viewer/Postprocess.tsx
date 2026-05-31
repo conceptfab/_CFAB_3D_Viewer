@@ -23,7 +23,11 @@ export function Postprocess() {
   const exposure = useStore((s) => s.config.tone.exposure);
 
   return (
-    <EffectComposer multisampling={4}>
+    // multisampling=0: MSAA na composerze z efektami powoduje błąd WebGL
+    // „glBlitFramebuffer: depth/stencil attachments cannot be the same image"
+    // (spam setek błędów → WebGL: too many errors → Context Lost). Antyaliasing
+    // zapewnia SMAA poniżej, więc MSAA jest tu zbędne i szkodliwe.
+    <EffectComposer multisampling={0}>
       <Exposure value={exposure} />
       <ToneMapping mode={TONE_MODE[mode]} />
       <SMAA />

@@ -104,17 +104,20 @@ export async function deleteScene(id: string): Promise<void> {
     sharedModelCount = await countModelReferences(scene.modelBlobUrl, id);
   }
 
-  // Usuń rekord z DB.
+  // Usuń rekord z DB — to jest najważniejsze i musi się udać.
   await db.delete(scenes).where(eq(scenes.id, id));
 
-  // Usuń miniatury z Blob (zawsze).
-  if (scene.thumbBlobUrl) {
-    await del(scene.thumbBlobUrl);
-  }
-
-  // Usuń model z Blob (tylko gdy nie współdzielony).
-  if (scene.modelBlobUrl && sharedModelCount === 0) {
-    await del(scene.modelBlobUrl);
+  // Czyszczenie plików Blob jest BEST-EFFORT. Jeśli del() rzuci (np. plik leży
+  // w skasowanym/innym store → „Vercel Blob: This store does not exist"), NIE
+  // może to wywalić całego DELETE — rekord jest już usunięty. Logujemy i idziemy dalej.
+  try {
+    if (scene.thumbBlobUrl) await del(scene.thumbBlobUrl);
+    if (scene.modelBlobUrl && sharedModelCount === 0) await del(scene.modelBlobUrl);
+  } catch (err) {
+    console.warn(
+      `[deleteScene] czyszczenie Blob nieudane dla sceny ${id} (rekord i tak usunięty):`,
+      err
+    );
   }
 }
 
