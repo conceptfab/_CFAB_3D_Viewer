@@ -93,6 +93,18 @@ export async function findOrphanedBlobs(opts: AuditOpts = {}): Promise<OrphanRep
 
   orphans.sort((a, b) => b.size - a.size);
 
+  return {
+    totalBlobs,
+    referencedCount: referenced.size,
+    ...orphanListStats(orphans, safetyWindowHours),
+  };
+}
+
+/** Statystyki listy sierot — wspólne dla skanu i lokalnego prune po DELETE. */
+export function orphanListStats(
+  orphans: OrphanBlob[],
+  safetyWindowHours: number
+): Pick<OrphanReport, 'orphans' | 'recentSkipped' | 'safetyWindowHours' | 'summary'> {
   const byKind: Record<OrphanKind, { count: number; bytes: number }> = {
     model: { count: 0, bytes: 0 },
     thumbnail: { count: 0, bytes: 0 },
@@ -104,14 +116,22 @@ export async function findOrphanedBlobs(opts: AuditOpts = {}): Promise<OrphanRep
     byKind[o.kind].bytes += o.size;
     bytes += o.size;
   }
-
   return {
-    totalBlobs,
-    referencedCount: referenced.size,
     orphans,
     recentSkipped: orphans.filter((o) => !o.deletable).length,
     safetyWindowHours,
     summary: { count: orphans.length, bytes, byKind },
+  };
+}
+
+/** Usuwa wpisy z raportu po kasowaniu — bez ponownego skanu całego Blob store. */
+export function pruneOrphanReport(report: OrphanReport, removedUrls: Iterable<string>): OrphanReport {
+  const removed = new Set(removedUrls);
+  const orphans = report.orphans.filter((o) => !removed.has(o.url));
+  return {
+    totalBlobs: report.totalBlobs,
+    referencedCount: report.referencedCount,
+    ...orphanListStats(orphans, report.safetyWindowHours),
   };
 }
 

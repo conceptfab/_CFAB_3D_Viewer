@@ -10,7 +10,7 @@ vi.mock('./repo', () => ({
   getReferencedBlobUrls: vi.fn(),
 }));
 
-import { findOrphanedBlobs, deleteOrphanedBlobs } from './blobAudit';
+import { findOrphanedBlobs, deleteOrphanedBlobs, pruneOrphanReport } from './blobAudit';
 
 const NOW = new Date('2026-05-31T12:00:00Z').getTime();
 const hoursAgo = (h: number) => new Date(NOW - h * 3_600_000);
@@ -156,6 +156,48 @@ describe('deleteOrphanedBlobs', () => {
 
     expect(del).not.toHaveBeenCalled();
     expect(result.skipped[0]).toMatchObject({ url: fresh.url, reason: 'too-recent' });
+  });
+
+  it('pruneOrphanReport usuwa wpisy i przelicza summary', () => {
+    const report = {
+      totalBlobs: 2,
+      referencedCount: 0,
+      orphans: [
+        {
+          url: 'https://b/a',
+          pathname: 'models/a.glb',
+          kind: 'model' as const,
+          size: 100,
+          uploadedAt: '2026-05-01T00:00:00.000Z',
+          ageHours: 48,
+          deletable: true,
+        },
+        {
+          url: 'https://b/b',
+          pathname: 'thumbnails/b.png',
+          kind: 'thumbnail' as const,
+          size: 50,
+          uploadedAt: '2026-05-01T00:00:00.000Z',
+          ageHours: 48,
+          deletable: true,
+        },
+      ],
+      recentSkipped: 0,
+      safetyWindowHours: 24,
+      summary: {
+        count: 2,
+        bytes: 150,
+        byKind: {
+          model: { count: 1, bytes: 100 },
+          thumbnail: { count: 1, bytes: 50 },
+          unknown: { count: 0, bytes: 0 },
+        },
+      },
+    };
+    const pruned = pruneOrphanReport(report, ['https://b/a']);
+    expect(pruned.orphans).toHaveLength(1);
+    expect(pruned.summary.count).toBe(1);
+    expect(pruned.summary.bytes).toBe(50);
   });
 
   it('ignoreSafetyWindow kasuje świeżą sierotę', async () => {

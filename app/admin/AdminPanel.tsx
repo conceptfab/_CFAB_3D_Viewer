@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { UserRow } from '@/lib/db/schema';
 import type { OrphanReport } from '@/lib/scenes/blobAudit';
+import OrphanBlobSection from './OrphanBlobSection';
 
 export default function AdminPanel({
   initialUsers,
@@ -19,14 +20,6 @@ export default function AdminPanel({
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-
-  // Sekcja „Osierocone pliki Blob".
-  const [orphans, setOrphans] = useState<OrphanReport | null>(initialOrphans);
-  const [orphansError, setOrphansError] = useState<string | null>(initialOrphansError);
-  const [scanning, setScanning] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [deleting, setDeleting] = useState(false);
-  const [blobMessage, setBlobMessage] = useState('');
 
   async function refresh() {
     const res = await fetch('/api/admin/users');
@@ -81,76 +74,6 @@ export default function AdminPanel({
     await refresh();
   }
 
-  // ── Osierocone pliki Blob ──────────────────────────────────────────────────
-  async function scanOrphans() {
-    setScanning(true);
-    setOrphansError(null);
-    setSelected(new Set());
-    try {
-      const res = await fetch('/api/admin/blobs');
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        throw new Error(d.error ?? `Błąd skanu: ${res.status}`);
-      }
-      setOrphans(await res.json());
-    } catch (e) {
-      setOrphansError(e instanceof Error ? e.message : 'Skan nieudany.');
-      setOrphans(null);
-    } finally {
-      setScanning(false);
-    }
-  }
-
-  function toggleOrphan(url: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(url)) next.delete(url);
-      else next.add(url);
-      return next;
-    });
-  }
-
-  function toggleAllOrphans() {
-    setSelected((prev) =>
-      prev.size === allOrphanUrls.length ? new Set() : new Set(allOrphanUrls)
-    );
-  }
-
-  async function deleteSelectedOrphans() {
-    if (selected.size === 0) return;
-    const selectedList = orphans?.orphans.filter((o) => selected.has(o.url)) ?? [];
-    const freshCount = selectedList.filter((o) => !o.deletable).length;
-    const confirmMsg =
-      freshCount > 0
-        ? `Usunąć ${selected.size} plik(ów)? W tym ${freshCount} świeżych (młodszych niż ${orphans?.safetyWindowHours ?? 24} godz.) — mogą być jeszcze potrzebne przy zapisie sceny. Kontynuować mimo to? Tej operacji nie można cofnąć.`
-        : `Usunąć ${selected.size} plik(ów) z Blob? Tej operacji nie można cofnąć.`;
-    if (!confirm(confirmMsg)) return;
-    setDeleting(true);
-    setOrphansError(null);
-    try {
-      const res = await fetch('/api/admin/blobs', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          urls: Array.from(selected),
-          forceRecent: freshCount > 0,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? `Błąd kasowania: ${res.status}`);
-      await scanOrphans(); // odśwież listę (czyści też zaznaczenie)
-      setBlobMessage(`Usunięto: ${data.deleted.length}. Pominięto: ${data.skipped.length}.`);
-    } catch (e) {
-      setOrphansError(e instanceof Error ? e.message : 'Kasowanie nieudane.');
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  const allOrphanUrls = orphans ? orphans.orphans.map((o) => o.url) : [];
-  const deletableCount = orphans ? orphans.orphans.filter((o) => o.deletable).length : 0;
-  const freshCount = orphans ? orphans.recentSkipped : 0;
-
   return (
     <main style={styles.container}>
       <div style={styles.header}>
@@ -158,7 +81,6 @@ export default function AdminPanel({
         <Link href="/" style={styles.backLink}>← Strona główna</Link>
       </div>
 
-      {/* Formularz dodawania */}
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Dodaj użytkownika</h2>
         <form onSubmit={handleAddUser} style={styles.addForm}>
@@ -178,7 +100,6 @@ export default function AdminPanel({
         {error && <p style={styles.error}>{error}</p>}
       </section>
 
-      {/* Tabela użytkowników */}
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Użytkownicy ({userList.length})</h2>
         <div style={styles.tableWrapper}>
@@ -238,134 +159,12 @@ export default function AdminPanel({
         </div>
       </section>
 
-      {/* Osierocone pliki Blob */}
-      <section style={styles.section}>
-        <div style={styles.blobHeader}>
-          <h2 style={{ ...styles.sectionTitle, margin: 0 }}>
-            Osierocone pliki Blob{orphans ? ` (${orphans.summary.count})` : ''}
-          </h2>
-          <button
-            type="button"
-            onClick={() => {
-              setBlobMessage('');
-              scanOrphans();
-            }}
-            disabled={scanning}
-            style={styles.btn}
-          >
-            {scanning ? 'Skanowanie…' : 'Skanuj ponownie'}
-          </button>
-        </div>
-
-        {orphansError && <p style={styles.error}>{orphansError}</p>}
-        {blobMessage && <p style={styles.success}>{blobMessage}</p>}
-
-        {orphans && orphans.summary.count === 0 && !orphansError && (
-          <p style={styles.blobEmpty}>Brak osieroconych plików — wszystko jest w użyciu. 🎉</p>
-        )}
-
-        {orphans && orphans.summary.count > 0 && (
-          <>
-            <p style={styles.blobSummary}>
-              Łącznie {formatBytes(orphans.summary.bytes)} do odzyskania
-              {` · modele: ${orphans.summary.byKind.model.count}`}
-              {` · miniatury: ${orphans.summary.byKind.thumbnail.count}`}
-              {` · kasowalne od razu: ${deletableCount}`}
-              {freshCount > 0 &&
-                ` · świeże (< ${orphans.safetyWindowHours} godz.): ${freshCount}`}
-            </p>
-
-            {freshCount > 0 && deletableCount === 0 && (
-              <p style={styles.blobHint}>
-                Wszystkie pliki są w oknie bezpieczeństwa ({orphans.safetyWindowHours} godz.).
-                Możesz je zaznaczyć i usunąć — przy kasowaniu świeżych plików pojawi się
-                dodatkowe potwierdzenie.
-              </p>
-            )}
-
-            <div style={{ marginBottom: 12 }}>
-              <button
-                type="button"
-                onClick={deleteSelectedOrphans}
-                disabled={deleting || selected.size === 0}
-                style={{ ...styles.deleteBtn, opacity: selected.size === 0 ? 0.5 : 1 }}
-              >
-                {deleting ? 'Usuwanie…' : `Usuń zaznaczone (${selected.size})`}
-              </button>
-            </div>
-
-            <div style={styles.tableWrapper}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>
-                      <input
-                        type="checkbox"
-                        checked={allOrphanUrls.length > 0 && selected.size === allOrphanUrls.length}
-                        onChange={toggleAllOrphans}
-                        disabled={allOrphanUrls.length === 0}
-                        title="Zaznacz/odznacz wszystkie"
-                      />
-                    </th>
-                    <th style={styles.th}>Plik</th>
-                    <th style={styles.th}>Typ</th>
-                    <th style={styles.th}>Rozmiar</th>
-                    <th style={styles.th}>Wiek</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orphans.orphans.map((o) => (
-                    <tr key={o.url} style={{ ...styles.tr, opacity: o.deletable ? 1 : 0.5 }}>
-                      <td style={styles.td}>
-                        <input
-                          type="checkbox"
-                          checked={selected.has(o.url)}
-                          onChange={() => toggleOrphan(o.url)}
-                          title={
-                            o.deletable
-                              ? 'Zaznacz do usunięcia'
-                              : `Świeży (< ${orphans.safetyWindowHours} godz.) — wymaga potwierdzenia przy kasowaniu`
-                          }
-                        />
-                      </td>
-                      <td style={{ ...styles.td, fontFamily: 'monospace', fontSize: 12 }}>{o.pathname}</td>
-                      <td style={styles.td}>
-                        {o.kind === 'model' ? 'model' : o.kind === 'thumbnail' ? 'miniatura' : '—'}
-                      </td>
-                      <td style={styles.td}>{formatBytes(o.size)}</td>
-                      <td style={styles.td}>
-                        {formatAge(o.ageHours)}
-                        {!o.deletable && <span style={styles.blobFresh}> · świeży</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </section>
+      <OrphanBlobSection
+        initialOrphans={initialOrphans}
+        initialOrphansError={initialOrphansError}
+      />
     </main>
   );
-}
-
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  const units = ['KB', 'MB', 'GB', 'TB'];
-  let v = n / 1024;
-  let i = 0;
-  while (v >= 1024 && i < units.length - 1) {
-    v /= 1024;
-    i++;
-  }
-  return `${v.toFixed(1).replace('.', ',')} ${units[i]}`;
-}
-
-function formatAge(hours: number): string {
-  if (hours < 1) return '< 1 godz.';
-  if (hours < 24) return `${Math.floor(hours)} godz.`;
-  const days = Math.floor(hours / 24);
-  return `${days} ${days === 1 ? 'dzień' : 'dni'}`;
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -387,18 +186,4 @@ const styles: Record<string, React.CSSProperties> = {
   td: { padding: '10px 12px', color: 'var(--ink)' },
   select: { padding: '4px 8px', border: '1px solid var(--border-strong)', borderRadius: 5, fontSize: 13, color: 'var(--ink)', background: 'var(--surface-2)', cursor: 'pointer' },
   deleteBtn: { padding: '4px 10px', background: 'none', border: '1px solid var(--danger-border)', color: 'var(--danger)', borderRadius: 5, fontSize: 12, cursor: 'pointer' },
-  blobHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  blobEmpty: { fontSize: 14, color: 'var(--muted)', margin: 0 },
-  blobSummary: { fontSize: 13, color: 'var(--muted)', margin: '0 0 14px' },
-  blobHint: {
-    fontSize: 13,
-    color: 'var(--ink)',
-    margin: '0 0 14px',
-    padding: '10px 12px',
-    background: 'rgba(245, 158, 11, 0.12)',
-    borderRadius: 8,
-    border: '1px solid rgba(245, 158, 11, 0.35)',
-    lineHeight: 1.5,
-  },
-  blobFresh: { color: 'var(--muted)', fontSize: 11 },
 };

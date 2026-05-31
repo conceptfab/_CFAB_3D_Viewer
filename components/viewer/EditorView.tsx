@@ -14,6 +14,7 @@ import { Gizmos } from './Gizmos';
 import { SceneIcons } from './SceneIcons';
 import { ModelErrorBoundary } from './ModelErrorBoundary';
 import { useStore, type EditorView as EditorViewId, type Vec3 } from '../store';
+import { CamProbe } from './_CamDebug';
 
 /** Kierunki kamery dla rzutów ortograficznych (od strony osi w stronę środka). */
 const ORTHO_DIR: Record<
@@ -135,6 +136,7 @@ export function EditorView() {
       <axesHelper args={[1.5]} />
 
       <EditorRig key={view} view={view} />
+      <CamProbe label="EDITOR" />
       <Gizmos />
       <SceneIcons />
 

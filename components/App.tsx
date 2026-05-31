@@ -9,6 +9,7 @@ import { ViewButtons } from './ui/ViewButtons';
 import { Outliner } from './ui/Outliner';
 import { Inspector } from './ui/Inspector';
 import { Branding } from './ui/Branding';
+import { CamDebugHud } from './viewer/_CamDebug';
 import { SaveSceneDialog } from './scenes/SaveSceneDialog';
 import { ShareDialog } from './scenes/ShareDialog';
 import { IconSave, IconSaveAs, IconPreset, IconLink } from './ui/icons';
@@ -63,6 +64,7 @@ export default function App({
 
   return (
     <div className="layout">
+      <CamDebugHud />
       {/* 1. Finalny render (kamera sceny) */}
       <main className="viewer">
         <Branding />

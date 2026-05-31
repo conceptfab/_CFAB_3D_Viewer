@@ -8,6 +8,7 @@ import { CameraRig } from './CameraRig';
 import { Postprocess } from './Postprocess';
 import { ModelErrorBoundary } from './ModelErrorBoundary';
 import { DEFAULT_CONFIG, useStore } from '../store';
+import { CamProbe } from './_CamDebug';
 
 export function Viewer() {
   const cam = DEFAULT_CONFIG.camera;
@@ -41,6 +42,7 @@ export function Viewer() {
       </Suspense>
 
       <CameraRig />
+      <CamProbe label="FINAL" />
       <Postprocess />
     </Canvas>
   );
