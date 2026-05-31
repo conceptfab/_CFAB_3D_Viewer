@@ -36,7 +36,7 @@ export function SceneCard({ scene, isOwner }: SceneCardProps) {
   }
 
   return (
-    <article className="scene-card">
+    <article className="gallery-card">
       {/* Miniatura */}
       <a href={`/editor/${scene.id}`} className="scene-card__thumb-link">
         {scene.thumbBlobUrl ? (
