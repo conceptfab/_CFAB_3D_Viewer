@@ -531,3 +531,29 @@ html, body, #root {
 .scene-card-btn--danger { background: #fee2e2; color: #991b1b; }
 .scene-card-btn--danger:hover:not(:disabled) { background: #fecaca; }
 .scene-card-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* --- Read-only viewer (public share/embed pages) --- */
+.read-only-viewer {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #dcdde0;
+}
+
+.read-only-viewer canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.read-only-viewer-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100vh;
+  background: #dcdde0;
+  font-family: Inter, system-ui, sans-serif;
+  color: #555;
+}
