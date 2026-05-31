@@ -1,16 +1,22 @@
-'use client';
+// app/editor/page.tsx
+// Server Component: detects admin role, renders EditorShell with isAdmin prop.
+import { getCurrentUser } from '@/lib/auth/session';
+import { EditorShell } from '@/components/EditorShell';
 
-import dynamic from 'next/dynamic';
+export default async function EditorPage() {
+  // getCurrentUser returns null for unauthenticated — EditorShell still renders
+  // (the middleware / requireUser in API routes handles auth enforcement).
+  // For the new-scene editor, we just want to know if admin to show preset button.
+  const user = await getCurrentUser();
+  const isAdmin = user !== null && user.role === 'admin';
 
-const EditorApp = dynamic(() => import('@/components/App'), {
-  ssr: false,
-  loading: () => (
-    <div style={{ display: 'grid', placeItems: 'center', height: '100vh', background: '#f5f5f4' }}>
-      <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2a8a66', animation: 'pulse 1.4s ease-in-out infinite' }} />
-    </div>
-  ),
-});
-
-export default function EditorPage() {
-  return <EditorApp />;
+  return (
+    <EditorShell
+      isAdmin={isAdmin}
+      modelBlobUrl={null}
+      modelFileName={null}
+      thumbBlobUrl={null}
+      sceneTitle="Nowy preset"
+    />
+  );
 }

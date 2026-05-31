@@ -20,8 +20,10 @@ export default async function EditorScenePage({ params }: Props) {
   const scene = await getScene(id);
 
   if (!scene) notFound();
-  // Etap B: tylko właściciel. Etap D doda uprawnienia per-scena.
-  if (scene.ownerId !== user.id) notFound();
+  // Etap C: admin może otworzyć każdą scenę/preset; zwykły user tylko własne.
+  if (scene.ownerId !== user.id && user.role !== 'admin') notFound();
 
-  return <ExistingSceneEditor scene={scene} />;
+  const isAdmin = user.role === 'admin';
+
+  return <ExistingSceneEditor scene={scene} isAdmin={isAdmin} />;
 }
