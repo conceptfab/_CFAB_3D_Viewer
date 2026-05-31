@@ -14,7 +14,7 @@ interface SaveSceneDialogProps {
 /**
  * Modal „Zapisz scenę" wywołany z paska narzędzi edytora.
  * Renderowany poza drzewem <Canvas>. Dostęp do WebGLRenderer przez store.glRef
- * (rejestrowany przez onCreated callbacku Canvas w Viewer.tsx).
+ * (rejestrowany w onCreated callbacku Canvas w Viewer.tsx).
  */
 export function SaveSceneDialog({ onClose }: SaveSceneDialogProps) {
   const router = useRouter();
@@ -31,7 +31,17 @@ export function SaveSceneDialog({ onClose }: SaveSceneDialogProps) {
       setError('Podaj tytuł sceny.');
       return;
     }
-    if (!loadedModel?.file) {
+    if (!loadedModel) {
+      setError('Załaduj model .glb przed zapisem.');
+      return;
+    }
+    // Świeży plik z dysku → wgrywamy. Scena otwarta z galerii (file=null, objectUrl to
+    // istniejący URL Blob) → reużywamy URL modelu bez ponownego uploadu.
+    const existingModelUrl =
+      !loadedModel.file && loadedModel.objectUrl.startsWith('https://')
+        ? loadedModel.objectUrl
+        : null;
+    if (!loadedModel.file && !existingModelUrl) {
       setError('Załaduj model .glb przed zapisem.');
       return;
     }
@@ -44,14 +54,15 @@ export function SaveSceneDialog({ onClose }: SaveSceneDialogProps) {
     setError(null);
 
     try {
-      // 1. Zrzut miniatury.
+      // 1. Zrzut miniatury z aktualnego widoku.
       const thumbBlob = await captureThumbnail(glRef);
       if (!thumbBlob) throw new Error('Nie udało się przechwycić miniatury.');
 
-      // 2. Równoległy upload modelu i miniatury do Vercel Blob.
+      // 2. Upload miniatury (zawsze) + modelu (tylko świeży plik; inaczej reużycie URL).
       const { modelBlobUrl, thumbBlobUrl } = await uploadAssets(
         loadedModel.file,
-        thumbBlob
+        thumbBlob,
+        existingModelUrl
       );
 
       // 3. Zapis sceny przez API.
@@ -87,13 +98,6 @@ export function SaveSceneDialog({ onClose }: SaveSceneDialogProps) {
     <div className="save-scene-overlay" role="dialog" aria-modal="true">
       <div className="save-scene-modal">
         <h2>Zapisz scenę</h2>
-
-        {!loadedModel?.file && (
-          <p className="save-scene-warning">
-            Uwaga: model załadowany z URL (nie z dysku) — plik nie będzie zapisany do Blob.
-            Cofnij i załaduj model z dysku (.glb drag&amp;drop).
-          </p>
-        )}
 
         <label htmlFor="scene-title">Tytuł sceny</label>
         <input

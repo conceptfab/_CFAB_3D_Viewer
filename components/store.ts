@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import type { WebGLRenderer } from 'three';
 
 export type ToneMode = 'NEUTRAL' | 'ACES_FILMIC' | 'AGX' | 'REINHARD';
 
