@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, type JSX } from 'react';
 import { EffectComposer, ToneMapping, FXAA } from '@react-three/postprocessing';
-import { ToneMappingMode, SMAAEffect, EffectAttribute } from 'postprocessing';
+import { ToneMappingMode, SMAAEffect, SMAAPreset, EffectAttribute } from 'postprocessing';
 import { useStore, type ToneMode } from '../store';
 import { ExposureEffect } from '../scene/exposureEffect';
 import { smaaPresetFor } from '@/lib/viewer/antialiasing';
@@ -34,12 +34,16 @@ function Exposure({ value }: { value: number }) {
  * We build the effect by hand because @react-three/postprocessing's <SMAA>
  * wrapper doesn't forward a ref to the effect instance.
  */
+class DepthlessSMAAEffect extends SMAAEffect {
+  constructor(preset: SMAAPreset) {
+    super({ preset });
+    // `setAttributes` is protected on Effect — reachable here in the subclass.
+    this.setAttributes(this.getAttributes() & ~EffectAttribute.DEPTH);
+  }
+}
+
 function Smaa({ preset }: { preset: number }) {
-  const effect = useMemo(() => {
-    const e = new SMAAEffect({ preset });
-    e.setAttributes(e.getAttributes() & ~EffectAttribute.DEPTH);
-    return e;
-  }, [preset]);
+  const effect = useMemo(() => new DepthlessSMAAEffect(preset as SMAAPreset), [preset]);
   useEffect(() => () => effect.dispose(), [effect]);
   return <primitive object={effect} dispose={null} />;
 }
