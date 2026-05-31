@@ -20,6 +20,10 @@ export function SceneGrid({ initialScenes }: SceneGridProps) {
     setScenes((prev) => prev.filter((s) => s.id !== id));
   };
 
+  const handleRename = (id: string, title: string) => {
+    setScenes((prev) => prev.map((s) => (s.id === id ? { ...s, title } : s)));
+  };
+
   if (scenes.length === 0) {
     return <p className="home-empty-after-delete">Wszystkie sceny usunięte.</p>;
   }
@@ -27,7 +31,7 @@ export function SceneGrid({ initialScenes }: SceneGridProps) {
   return (
     <section className="scene-grid" aria-label="Lista scen">
       {scenes.map((scene) => (
-        <SceneCard key={scene.id} scene={scene} onDelete={handleDelete} />
+        <SceneCard key={scene.id} scene={scene} onDelete={handleDelete} onRename={handleRename} />
       ))}
     </section>
   );

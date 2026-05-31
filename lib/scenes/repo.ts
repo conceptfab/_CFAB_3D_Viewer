@@ -160,6 +160,25 @@ export async function countModelReferences(
 }
 
 /**
+ * Zwraca zbiór wszystkich niepustych URL-i Blob (model + miniatura) używanych
+ * przez JAKĄKOLWIEK scenę — wszyscy właściciele, łącznie z presetami.
+ * Store Blob jest globalny, więc audyt sierot musi widzieć referencje ze
+ * wszystkich scen. Używane przez lib/scenes/blobAudit.
+ */
+export async function getReferencedBlobUrls(): Promise<Set<string>> {
+  const rows = await db
+    .select({ model: scenes.modelBlobUrl, thumb: scenes.thumbBlobUrl })
+    .from(scenes);
+
+  const urls = new Set<string>();
+  for (const row of rows) {
+    if (row.model) urls.add(row.model);
+    if (row.thumb) urls.add(row.thumb);
+  }
+  return urls;
+}
+
+/**
  * Klonuje preset na nową scenę należącą do `newOwnerId`.
  * - Nowa scena: is_preset=false, owner_id=newOwnerId
  * - Współdzieli model_blob_url, model_file_name i thumb_blob_url (nie kopiuje pliku w Blob)

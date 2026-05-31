@@ -17,7 +17,7 @@ vi.mock('@vercel/blob', () => ({
   del: vi.fn(),
 }));
 
-import { createScene, getScene, listScenes, updateScene, deleteScene, instantiatePreset } from './repo';
+import { createScene, getScene, listScenes, updateScene, deleteScene, instantiatePreset, getReferencedBlobUrls } from './repo';
 
 const MOCK_OWNER_ID = 'user-uuid-1';
 const MOCK_SCENE_ID = 'scene-uuid-1';
@@ -159,6 +159,29 @@ describe('updateScene', () => {
     // null jest jawnie utrwalany (różny od „pole nieobecne").
     expect(setSpy.mock.calls[0][0]).toHaveProperty('modelBlobUrl', null);
     expect(setSpy.mock.calls[0][0]).toHaveProperty('modelFileName', null);
+  });
+});
+
+describe('getReferencedBlobUrls', () => {
+  it('zbiera niepuste model+thumb URL-e ze wszystkich scen do Set (dedup, bez null)', async () => {
+    const { db } = await import('@/lib/db');
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockResolvedValue([
+        { model: 'https://b/models/a.glb', thumb: 'https://b/thumbnails/a.png' },
+        { model: 'https://b/models/b.glb', thumb: null },
+        { model: null, thumb: null },
+        { model: 'https://b/models/a.glb', thumb: 'https://b/thumbnails/c.png' }, // duplikat modelu
+      ]),
+    });
+
+    const set = await getReferencedBlobUrls();
+
+    expect(set.has('https://b/models/a.glb')).toBe(true);
+    expect(set.has('https://b/models/b.glb')).toBe(true);
+    expect(set.has('https://b/thumbnails/a.png')).toBe(true);
+    expect(set.has('https://b/thumbnails/c.png')).toBe(true);
+    // 5 niepustych wartości, ale model a.glb zduplikowany → 4 unikalne; null pominięte
+    expect(set.size).toBe(4);
   });
 });
 
