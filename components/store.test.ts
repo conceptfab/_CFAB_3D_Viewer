@@ -178,3 +178,28 @@ describe('camera operations', () => {
     expect(hero.fov).toBe(35);
   });
 });
+
+describe('new editor state + setters', () => {
+  beforeEach(reset);
+
+  it('aimGizmoMode domyślnie translate', () => {
+    expect(useStore.getState().aimGizmoMode).toBe('translate');
+  });
+
+  it('setAimGizmoMode ustawia tryb', () => {
+    useStore.getState().setAimGizmoMode('rotate');
+    expect(useStore.getState().aimGizmoMode).toBe('rotate');
+  });
+
+  it('setAntialiasing ustawia config.antialiasing', () => {
+    useStore.getState().setAntialiasing('FXAA');
+    expect(useStore.getState().config.antialiasing).toBe('FXAA');
+  });
+
+  it('setKeyLight({target}) robi merge zachowując position', () => {
+    useStore.getState().setKeyLight({ target: [1, 2, 3] });
+    const kl = useStore.getState().config.keyLight;
+    expect(kl.target).toEqual([1, 2, 3]);
+    expect(kl.position).toEqual(DEFAULT_CONFIG.keyLight.position);
+  });
+});

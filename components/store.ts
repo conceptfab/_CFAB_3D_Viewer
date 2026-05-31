@@ -38,6 +38,9 @@ export type BrandingMode = 'text' | 'image';
 /** Tryb gizmo dla HERO NULL. */
 export type GizmoMode = 'translate' | 'rotate' | 'scale';
 
+/** Tryb gizmo dla kamer i świateł (aim = celowanie przez target). */
+export type AimGizmoMode = 'translate' | 'rotate' | 'target';
+
 export type Vec3 = [number, number, number];
 
 export interface CameraPresetView {
@@ -201,6 +204,8 @@ interface State {
   setSelected: (id: string) => void;
   gizmoMode: GizmoMode;
   setGizmoMode: (m: GizmoMode) => void;
+  aimGizmoMode: AimGizmoMode;
+  setAimGizmoMode: (m: AimGizmoMode) => void;
 
   setEnv: (patch: Partial<SceneConfig['environment']>) => void;
   setBackground: (patch: Partial<SceneConfig['background']>) => void;
@@ -208,6 +213,7 @@ interface State {
   setShadows: (patch: Partial<SceneConfig['shadows']>) => void;
   setTone: (patch: Partial<SceneConfig['tone']>) => void;
   setMaterial: (patch: Partial<SceneConfig['material']>) => void;
+  setAntialiasing: (mode: AntialiasingMode) => void;
   setBranding: (patch: Partial<SceneConfig['branding']>) => void;
   setHero: (patch: Partial<SceneConfig['hero']>) => void;
   setCamera: (
@@ -247,6 +253,8 @@ export const useStore = create<State>((set) => ({
   setSelected: (selected) => set({ selected }),
   gizmoMode: 'translate',
   setGizmoMode: (gizmoMode) => set({ gizmoMode }),
+  aimGizmoMode: 'translate',
+  setAimGizmoMode: (aimGizmoMode) => set({ aimGizmoMode }),
 
   setEnv: (patch) =>
     set((s) => ({ config: { ...s.config, environment: { ...s.config.environment, ...patch } } })),
@@ -260,6 +268,8 @@ export const useStore = create<State>((set) => ({
     set((s) => ({ config: { ...s.config, tone: { ...s.config.tone, ...patch } } })),
   setMaterial: (patch) =>
     set((s) => ({ config: { ...s.config, material: { ...s.config.material, ...patch } } })),
+  setAntialiasing: (mode) =>
+    set((s) => ({ config: { ...s.config, antialiasing: mode } })),
   setBranding: (patch) =>
     set((s) => ({ config: { ...s.config, branding: { ...s.config.branding, ...patch } } })),
   setHero: (patch) =>
