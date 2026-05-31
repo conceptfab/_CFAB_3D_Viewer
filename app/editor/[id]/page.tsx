@@ -1,8 +1,13 @@
 // app/editor/[id]/page.tsx
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth/session';
 import { getScene } from '@/lib/scenes/repo';
 import { ExistingSceneEditor } from '@/components/scenes/ExistingSceneEditor';
+
+export const metadata: Metadata = {
+  title: 'Edytor sceny — CFAB 3D Viewer',
+};
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -25,5 +30,5 @@ export default async function EditorScenePage({ params }: Props) {
 
   const isAdmin = user.role === 'admin';
 
-  return <ExistingSceneEditor scene={scene} isAdmin={isAdmin} />;
+  return <ExistingSceneEditor scene={scene} isAdmin={isAdmin} isOwner={scene.ownerId === user.id} />;
 }

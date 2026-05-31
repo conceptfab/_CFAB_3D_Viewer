@@ -13,13 +13,15 @@ interface Props {
   scene: SceneRecord;
   /** Czy zalogowany użytkownik jest adminem — pokazuje „Jako preset" w App */
   isAdmin?: boolean;
+  /** Czy zalogowany user jest właścicielem sceny — pokazuje przycisk „Link publiczny". */
+  isOwner?: boolean;
 }
 
 /**
  * Komponent kliencki: hydruje store danymi ze sceny i renderuje edytor.
  * Model ładowany z modelBlobUrl (zdalny URL zamiast objectUrl).
  */
-export function ExistingSceneEditor({ scene, isAdmin = false }: Props) {
+export function ExistingSceneEditor({ scene, isAdmin = false, isOwner = false }: Props) {
   const setLoadedModel = useStore((s) => s.setLoadedModel);
   const rawSet = useStore.setState;
 
@@ -35,5 +37,5 @@ export function ExistingSceneEditor({ scene, isAdmin = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene.id]);
 
-  return <EditorApp isAdmin={isAdmin} />;
+  return <EditorApp isAdmin={isAdmin} sceneId={isOwner ? scene.id : undefined} />;
 }

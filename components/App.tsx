@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { Viewer } from './viewer/Viewer';
 import { EditorView } from './viewer/EditorView';
 import { ModelDropzone } from './viewer/ModelDropzone';
@@ -9,9 +10,18 @@ import { Outliner } from './ui/Outliner';
 import { Inspector } from './ui/Inspector';
 import { Branding } from './ui/Branding';
 import { SaveSceneDialog } from './scenes/SaveSceneDialog';
+import { ShareDialog } from './scenes/ShareDialog';
 
-export default function App({ isAdmin = false }: { isAdmin?: boolean }) {
+export default function App({
+  isAdmin = false,
+  sceneId,
+}: {
+  isAdmin?: boolean;
+  /** Ustawione tylko dla ZAPISANEJ sceny właściciela → pokazuje „Link publiczny". */
+  sceneId?: string;
+}) {
   const [saveMode, setSaveMode] = useState<'scene' | 'preset' | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   return (
     <div className="layout">
@@ -32,13 +42,13 @@ export default function App({ isAdmin = false }: { isAdmin?: boolean }) {
       {/* 3. Outliner + inspektor kontekstowy */}
       <aside className="editor-panel">
         <div className="editor-panel__title">
-          <a
+          <Link
             href="/"
             title="Wyjdź do moich scen / panelu"
-            style={{ fontSize: 12, fontWeight: 700, color: '#2a8a66', textDecoration: 'none', whiteSpace: 'nowrap' }}
+            style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-2)', textDecoration: 'none', whiteSpace: 'nowrap' }}
           >
             ← Sceny
-          </a>
+          </Link>
           <span>Outliner</span>
           <div style={{ display: 'flex', gap: 6 }}>
             <button
@@ -59,6 +69,16 @@ export default function App({ isAdmin = false }: { isAdmin?: boolean }) {
                 Jako preset
               </button>
             )}
+            {sceneId && (
+              <button
+                type="button"
+                onClick={() => setShareOpen(true)}
+                className="save-scene-btn"
+                title="Link publiczny / embed do tej sceny"
+              >
+                Link publiczny
+              </button>
+            )}
           </div>
         </div>
         <Outliner />
@@ -70,6 +90,10 @@ export default function App({ isAdmin = false }: { isAdmin?: boolean }) {
           preset={saveMode === 'preset'}
           onClose={() => setSaveMode(null)}
         />
+      )}
+
+      {shareOpen && sceneId && (
+        <ShareDialog sceneId={sceneId} onClose={() => setShareOpen(false)} />
       )}
     </div>
   );
