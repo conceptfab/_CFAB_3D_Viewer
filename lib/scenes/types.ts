@@ -29,7 +29,7 @@ export type CreateSceneInput = {
 };
 
 export type UpdateSceneInput = Partial<
-  Pick<SceneRecord, 'title' | 'config' | 'thumbBlobUrl'>
+  Pick<SceneRecord, 'title' | 'config' | 'modelBlobUrl' | 'modelFileName' | 'thumbBlobUrl'>
 >;
 
 // ── Etap D ──────────────────────────────────────────────────────────────────

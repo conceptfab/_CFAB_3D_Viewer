@@ -63,8 +63,10 @@ export async function listScenes(
 }
 
 /**
- * Aktualizuje scenę (tytuł, config lub miniatura).
+ * Aktualizuje scenę (tytuł, config, model lub miniatura).
  * Automatycznie ustawia updatedAt = now().
+ * Pola modelu (modelBlobUrl/modelFileName) są utrwalane także gdy === null —
+ * pozwala to wyczyścić model po jego usunięciu w edytorze.
  * Zwraca null jeśli scena nie istnieje (nie rzuca wyjątku).
  */
 export async function updateScene(
@@ -76,6 +78,8 @@ export async function updateScene(
     .set({
       ...(patch.title !== undefined && { title: patch.title }),
       ...(patch.config !== undefined && { config: patch.config as any }),
+      ...(patch.modelBlobUrl !== undefined && { modelBlobUrl: patch.modelBlobUrl }),
+      ...(patch.modelFileName !== undefined && { modelFileName: patch.modelFileName }),
       ...(patch.thumbBlobUrl !== undefined && { thumbBlobUrl: patch.thumbBlobUrl }),
       updatedAt: new Date(),
     })

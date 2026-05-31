@@ -41,9 +41,9 @@ export default function App({
     return () => clearTimeout(t);
   }, [toast]);
 
-  // „Zapisz" dla istniejącej sceny: nadpisuje config + miniaturę (bez pytania o nazwę).
+  // „Zapisz" dla istniejącej sceny: nadpisuje config + model + miniaturę (bez pytania o nazwę).
   const handleSaveInPlace = async () => {
-    const { glRef, config } = useStore.getState();
+    const { glRef, config, loadedModel } = useStore.getState();
     if (!sceneId) return;
     if (!glRef) {
       setToast({ kind: 'err', text: 'Renderer niedostępny — spróbuj ponownie.' });
@@ -52,7 +52,7 @@ export default function App({
     setSaveBusy(true);
     setToast(null);
     try {
-      await updateSceneInPlace(sceneId, config, glRef);
+      await updateSceneInPlace(sceneId, config, glRef, loadedModel);
       setToast({ kind: 'ok', text: 'Zapisano zmiany.' });
     } catch (e) {
       setToast({ kind: 'err', text: e instanceof Error ? e.message : 'Błąd zapisu.' });

@@ -119,6 +119,47 @@ describe('updateScene', () => {
     const result = await updateScene(MOCK_SCENE_ID, { title: 'Nowa nazwa' });
     expect(result!.title).toBe('Nowa nazwa');
   });
+
+  it('utrwala nowy modelBlobUrl i modelFileName (podmiana modelu w istniejącej scenie)', async () => {
+    const { db } = await import('@/lib/db');
+    const NEW_URL = 'https://blob.vercel.com/models/NOWY.glb';
+    const updated = { ...mockSceneRecord, modelBlobUrl: NEW_URL, modelFileName: 'nowy.glb' };
+    const setSpy = vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([updated]),
+      }),
+    });
+    (db.update as any).mockReturnValue({ set: setSpy });
+
+    const result = await updateScene(MOCK_SCENE_ID, {
+      modelBlobUrl: NEW_URL,
+      modelFileName: 'nowy.glb',
+    });
+
+    // Pola modelu MUSZĄ trafić do db.set(), inaczej podmiana modelu nie utrwala się.
+    expect(setSpy.mock.calls[0][0]).toMatchObject({
+      modelBlobUrl: NEW_URL,
+      modelFileName: 'nowy.glb',
+    });
+    expect(result!.modelBlobUrl).toBe(NEW_URL);
+  });
+
+  it('czyści model (null) gdy scenę zapisano po usunięciu modelu', async () => {
+    const { db } = await import('@/lib/db');
+    const updated = { ...mockSceneRecord, modelBlobUrl: null, modelFileName: null };
+    const setSpy = vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([updated]),
+      }),
+    });
+    (db.update as any).mockReturnValue({ set: setSpy });
+
+    await updateScene(MOCK_SCENE_ID, { modelBlobUrl: null, modelFileName: null });
+
+    // null jest jawnie utrwalany (różny od „pole nieobecne").
+    expect(setSpy.mock.calls[0][0]).toHaveProperty('modelBlobUrl', null);
+    expect(setSpy.mock.calls[0][0]).toHaveProperty('modelFileName', null);
+  });
 });
 
 describe('deleteScene', () => {

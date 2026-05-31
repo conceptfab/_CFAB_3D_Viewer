@@ -49,6 +49,8 @@ export async function GET(_req: Request, ctx: Ctx): Promise<NextResponse> {
 const PatchSceneSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   config: z.record(z.string(), z.unknown()).optional(),
+  modelBlobUrl: z.url().nullable().optional(),
+  modelFileName: z.string().max(255).nullable().optional(),
   thumbBlobUrl: z.url().nullable().optional(),
 });
 
@@ -95,6 +97,8 @@ export async function PATCH(request: Request, ctx: Ctx): Promise<NextResponse> {
   const updated = await updateScene(id, {
     ...(parsed.data.title !== undefined && { title: parsed.data.title }),
     ...(parsed.data.config !== undefined && { config: parsed.data.config as any }),
+    ...(parsed.data.modelBlobUrl !== undefined && { modelBlobUrl: parsed.data.modelBlobUrl }),
+    ...(parsed.data.modelFileName !== undefined && { modelFileName: parsed.data.modelFileName }),
     ...(parsed.data.thumbBlobUrl !== undefined && { thumbBlobUrl: parsed.data.thumbBlobUrl }),
   });
 
