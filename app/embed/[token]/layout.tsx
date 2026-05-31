@@ -14,7 +14,7 @@ export default function EmbedLayout({ children }: { children: ReactNode }) {
     <html lang="pl">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <style>{`
           * { box-sizing: border-box; }
           html, body { margin: 0; padding: 0; overflow: hidden; background: #dcdde0; }

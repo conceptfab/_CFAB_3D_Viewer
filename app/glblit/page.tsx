@@ -1,39 +1,37 @@
 'use client';
-// TEMP DEBUG ROUTE (public) — isolates the glBlitFramebuffer depth-stencil error.
-// Mounts a minimal Canvas with the SAME gl config as Viewer.tsx + the real Postprocess.
-// Delete after debugging.
-import { Canvas } from '@react-three/fiber';
-import * as THREE from 'three';
-import { Postprocess } from '@/components/viewer/Postprocess';
+// TEMP DEBUG ROUTE (public) — reproduces the real editor: BOTH canvases (Viewer +
+// EditorView) with the real METRO.glb loaded via the store. Instrument blitFramebuffer
+// in-page (preview_eval) to find which path blits depth/stencil + capture its stack.
+// Delete after debugging (and remove public/METRO.glb).
+import { useEffect, useState } from 'react';
+import { Viewer } from '@/components/viewer/Viewer';
+import { EditorView } from '@/components/viewer/EditorView';
+import { ViewButtons } from '@/components/ui/ViewButtons';
+import { useStore } from '@/components/store';
 
 export default function GlBlitDebugPage() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    (window as unknown as { __store: typeof useStore }).__store = useStore;
+    useStore.getState().setLoadedModel({
+      objectUrl: '/METRO.glb',
+      fileName: 'METRO.glb',
+      file: null,
+    });
+    setReady(true);
+  }, []);
+
+  if (!ready) return <div style={{ color: '#fff', padding: 20 }}>loading…</div>;
+
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#222' }}>
-      <Canvas
-        shadows
-        dpr={[1, 2]}
-        gl={{
-          antialias: false,
-          alpha: false,
-          toneMapping: THREE.NoToneMapping,
-          toneMappingExposure: 1.0,
-          outputColorSpace: THREE.SRGBColorSpace,
-          preserveDrawingBuffer: true,
-        }}
-        camera={{ fov: 28, near: 0.1, far: 100, position: [2.4, 1.2, 3.2] }}
-      >
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[3, 4, 2]} castShadow />
-        <mesh castShadow receiveShadow>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="orange" />
-        </mesh>
-        <mesh rotation-x={-Math.PI / 2} position-y={-0.5} receiveShadow>
-          <planeGeometry args={[10, 10]} />
-          <meshStandardMaterial color="#888" />
-        </mesh>
-        <Postprocess />
-      </Canvas>
+    <div style={{ position: 'fixed', inset: 0, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+      <div style={{ position: 'relative', background: '#dcdde0' }}>
+        <Viewer />
+      </div>
+      <div style={{ position: 'relative', background: '#202227' }}>
+        <ViewButtons />
+        <EditorView />
+      </div>
     </div>
   );
 }

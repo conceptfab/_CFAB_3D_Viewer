@@ -1,7 +1,7 @@
 'use client';
-import { useMemo, type JSX } from 'react';
-import { EffectComposer, ToneMapping, SMAA, FXAA } from '@react-three/postprocessing';
-import { ToneMappingMode } from 'postprocessing';
+import { useEffect, useMemo, type JSX } from 'react';
+import { EffectComposer, ToneMapping, FXAA } from '@react-three/postprocessing';
+import { ToneMappingMode, SMAAEffect, EffectAttribute } from 'postprocessing';
 import { useStore, type ToneMode } from '../store';
 import { ExposureEffect } from '../scene/exposureEffect';
 import { smaaPresetFor } from '@/lib/viewer/antialiasing';
@@ -16,6 +16,31 @@ const TONE_MODE: Record<ToneMode, ToneMappingMode> = {
 function Exposure({ value }: { value: number }) {
   const effect = useMemo(() => new ExposureEffect(value), []);
   effect.exposure = value;
+  return <primitive object={effect} dispose={null} />;
+}
+
+/**
+ * SMAA antialiasing as a raw postprocessing effect, with its spurious depth
+ * attribute stripped.
+ *
+ * SMAAEffect's constructor ALWAYS advertises `CONVOLUTION | DEPTH`, but with the
+ * default COLOR edge-detection mode it never samples scene depth. That stray
+ * DEPTH flag makes EffectComposer (postprocessing 6.36+) allocate a stable-depth
+ * target and run a per-frame depth `blitFramebuffer` whose read and write depth
+ * attachments resolve to the same image → a `GL_INVALID_OPERATION:
+ * glBlitFramebuffer ... cannot be the same image` flood every frame (one per
+ * render, hundreds in the editor). Clearing DEPTH (keeping CONVOLUTION so SMAA
+ * still gets its own pass) removes the blit with no change to the AA result.
+ * We build the effect by hand because @react-three/postprocessing's <SMAA>
+ * wrapper doesn't forward a ref to the effect instance.
+ */
+function Smaa({ preset }: { preset: number }) {
+  const effect = useMemo(() => {
+    const e = new SMAAEffect({ preset });
+    e.setAttributes(e.getAttributes() & ~EffectAttribute.DEPTH);
+    return e;
+  }, [preset]);
+  useEffect(() => () => effect.dispose(), [effect]);
   return <primitive object={effect} dispose={null} />;
 }
 
@@ -40,7 +65,7 @@ export function Postprocess() {
     <ToneMapping key="tone" mode={TONE_MODE[mode]} />,
   ];
   if (aa === 'FXAA') effects.push(<FXAA key="fxaa" />);
-  else if (smaaPreset !== null) effects.push(<SMAA key={`smaa-${smaaPreset}`} preset={smaaPreset} />);
+  else if (smaaPreset !== null) effects.push(<Smaa key={`smaa-${smaaPreset}`} preset={smaaPreset} />);
 
   return <EffectComposer multisampling={0}>{effects}</EffectComposer>;
 }

@@ -104,7 +104,17 @@ html, body, #root {
   backdrop-filter: blur(8px);
   white-space: nowrap;
 }
-.viewport-bar--bottom { bottom: 12px; }
+/* Uwzględnij safe-area (notch / pasek gestów) — pasek zawsze nad krawędzią. */
+.viewport-bar--bottom { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+
+/* Wąskie ekrany (telefon pionowo): pozwól zawinąć przyciski, by pasek nie
+   wyjeżdżał poza widoczny obszar i pozostał czytelny nad dolną krawędzią. */
+@media (max-width: 640px) {
+  .viewport-bar--bottom {
+    max-width: calc(100vw - 24px);
+    flex-wrap: wrap;
+  }
+}
 .viewport-bar button {
   appearance: none;
   border: 0;
@@ -977,7 +987,10 @@ html, body, #root {
 .read-only-viewer {
   position: relative;
   width: 100%;
+  /* dvh — wyklucza obszar pod paskiem przeglądarki na mobile (inaczej dolny
+     pasek menu chowa się za chromem przeglądarki). 100vh jako fallback. */
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--bg);
 }
