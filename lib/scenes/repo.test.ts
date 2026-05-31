@@ -17,7 +17,7 @@ vi.mock('@vercel/blob', () => ({
   del: vi.fn(),
 }));
 
-import { createScene, getScene, listScenes, updateScene, deleteScene } from './repo';
+import { createScene, getScene, listScenes, updateScene, deleteScene, instantiatePreset } from './repo';
 
 const MOCK_OWNER_ID = 'user-uuid-1';
 const MOCK_SCENE_ID = 'scene-uuid-1';
@@ -179,5 +179,173 @@ describe('deleteScene', () => {
     // del wywołany tylko raz: thumb (model NIE kasowany)
     expect(del).toHaveBeenCalledTimes(1);
     expect(del).toHaveBeenCalledWith(mockSceneRecord.thumbBlobUrl);
+  });
+});
+
+// ─── instantiatePreset tests ──────────────────────────────────────────────────
+
+const PRESET_FIXTURE: SceneRecord = {
+  id: 'preset-001',
+  ownerId: 'admin-001',
+  title: 'Studio Neutral',
+  config: {
+    environment: { hdriUrl: 'https://example.com/env.hdr', intensity: 0.45 },
+    background: { stops: ['#eee', '#ddd', '#ccc', '#bbb'], centerY: 0.44 },
+    keyLight: {
+      position: [-2.5, 4, 3],
+      intensity: 0.55,
+      color: '#ffffff',
+      castShadow: true,
+      shadowMapSize: 4096,
+      shadowBias: -0.00012,
+      normalBias: 0.012,
+    },
+    shadows: { catcherOpacity: 0.3, contactOpacity: 0.3, contactBlur: 2 },
+    tone: { mode: 'NEUTRAL', exposure: 1.0 },
+    material: { envMapIntensity: 1.0 },
+    branding: {
+      mode: 'text',
+      text: 'CONCEPTFAB',
+      fontFamily: 'Inter',
+      color: '#1b1c20',
+      fontSize: 18,
+      fontWeight: 700,
+      letterSpacing: 1.5,
+      bgEnabled: true,
+      bgColor: '#ffffff',
+      imageUrl: '',
+      imageName: '',
+    },
+    hero: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+    camera: {
+      near: 0.05,
+      far: 80,
+      orbit: { minDist: 1.2, maxDist: 8, minPolar: 0.15, maxPolar: 1.52, damping: 0.08 },
+      active: 'hero',
+      cameras: [{ id: 'hero', name: 'Hero', position: [2.4, 1.4, 3.0], target: [0, 0.6, 0], fov: 28, showInFinalBar: true }],
+    },
+  } as SceneRecord['config'],
+  modelBlobUrl: 'https://blob.vercel.com/models/abc123.glb',
+  modelFileName: 'produkt.glb',
+  thumbBlobUrl: 'https://blob.vercel.com/thumbnails/abc123.png',
+  isPreset: true,
+  createdAt: new Date('2026-05-30T10:00:00Z'),
+  updatedAt: new Date('2026-05-30T10:00:00Z'),
+};
+
+describe('instantiatePreset', () => {
+  it('tworzy nową scenę z is_preset=false i owner_id=wywołującego', async () => {
+    const { db } = await import('@/lib/db');
+    const newUserId = 'user-999';
+    const newSceneId = 'scene-new-001';
+    const insertedAt = new Date('2026-05-30T11:00:00Z');
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([PRESET_FIXTURE]),
+      }),
+    });
+
+    const newRecord: SceneRecord = {
+      ...PRESET_FIXTURE,
+      id: newSceneId,
+      ownerId: newUserId,
+      isPreset: false,
+      createdAt: insertedAt,
+      updatedAt: insertedAt,
+    };
+
+    (db.insert as any).mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([newRecord]),
+      }),
+    });
+
+    const result = await instantiatePreset('preset-001', newUserId);
+
+    expect(result.isPreset).toBe(false);
+    expect(result.ownerId).toBe(newUserId);
+    expect(result.id).toBe(newSceneId);
+  });
+
+  it('klon współdzieli model_blob_url bez kopiowania pliku', async () => {
+    const { db } = await import('@/lib/db');
+    const newUserId = 'user-999';
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([PRESET_FIXTURE]),
+      }),
+    });
+
+    (db.insert as any).mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([{
+          ...PRESET_FIXTURE,
+          id: 'scene-new-002',
+          ownerId: newUserId,
+          isPreset: false,
+        }]),
+      }),
+    });
+
+    const result = await instantiatePreset('preset-001', newUserId);
+
+    expect(result.modelBlobUrl).toBe(PRESET_FIXTURE.modelBlobUrl);
+    expect(result.modelFileName).toBe(PRESET_FIXTURE.modelFileName);
+  });
+
+  it('klon współdzieli thumb_blob_url (decyzja 3 — kopiuj URL)', async () => {
+    const { db } = await import('@/lib/db');
+    const newUserId = 'user-999';
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([PRESET_FIXTURE]),
+      }),
+    });
+
+    (db.insert as any).mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([{
+          ...PRESET_FIXTURE,
+          id: 'scene-new-003',
+          ownerId: newUserId,
+          isPreset: false,
+        }]),
+      }),
+    });
+
+    const result = await instantiatePreset('preset-001', newUserId);
+
+    expect(result.thumbBlobUrl).toBe(PRESET_FIXTURE.thumbBlobUrl);
+  });
+
+  it('rzuca błąd gdy id nie wskazuje na preset', async () => {
+    const { db } = await import('@/lib/db');
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([{ ...PRESET_FIXTURE, isPreset: false }]),
+      }),
+    });
+
+    await expect(instantiatePreset('scene-regular', 'user-999')).rejects.toThrow(
+      'Scena nie jest presetem'
+    );
+  });
+
+  it('rzuca błąd gdy preset nie istnieje', async () => {
+    const { db } = await import('@/lib/db');
+
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
+      }),
+    });
+
+    await expect(instantiatePreset('nie-istnieje', 'user-999')).rejects.toThrow(
+      'Preset nie istnieje'
+    );
   });
 });
