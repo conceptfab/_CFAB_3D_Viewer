@@ -33,7 +33,6 @@ export function Studio() {
   const key = useStore((s) => s.config.keyLight);
   const shadows = useStore((s) => s.config.shadows);
   const [sx, sy, sz] = useStore((s) => s.modelSize);
-  const keyTarget = useStore((s) => s.config.keyLight.target);
   const lightRef = useRef<THREE.DirectionalLight>(null);
   const targetRef = useRef<THREE.Object3D>(null);
 
@@ -82,7 +81,7 @@ export function Studio() {
       </directionalLight>
 
       {/* Aim point for the directional light (position → target). */}
-      <object3D ref={targetRef} position={keyTarget} />
+      <object3D ref={targetRef} position={key.target} />
 
       <mesh rotation-x={-Math.PI / 2} position-y={0} receiveShadow>
         <planeGeometry args={[60, 60]} />
