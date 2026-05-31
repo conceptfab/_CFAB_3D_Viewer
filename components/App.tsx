@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Viewer } from './viewer/Viewer';
 import { EditorView } from './viewer/EditorView';
@@ -11,18 +11,52 @@ import { Inspector } from './ui/Inspector';
 import { Branding } from './ui/Branding';
 import { SaveSceneDialog } from './scenes/SaveSceneDialog';
 import { ShareDialog } from './scenes/ShareDialog';
-import { IconSave, IconPreset, IconLink } from './ui/icons';
+import { IconSave, IconSaveAs, IconPreset, IconLink } from './ui/icons';
+import { useStore } from './store';
+import { updateSceneInPlace } from './scenes/updateScene';
 
 export default function App({
   isAdmin = false,
   sceneId,
+  sceneTitle,
 }: {
   isAdmin?: boolean;
-  /** Ustawione tylko dla ZAPISANEJ sceny właściciela → pokazuje „Link publiczny". */
+  /** Ustawione tylko dla ZAPISANEJ sceny właściciela → „Zapisz" nadpisuje w miejscu. */
   sceneId?: string;
+  /** Tytuł zapisanej sceny — do „Zapisz jako (kopia)". */
+  sceneTitle?: string;
 }) {
   const [saveMode, setSaveMode] = useState<'scene' | 'preset' | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [toast, setToast] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+
+  // Auto-ukryj potwierdzenie sukcesu; błędy zostają do następnej akcji.
+  useEffect(() => {
+    if (toast?.kind !== 'ok') return;
+    const t = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  // „Zapisz" dla istniejącej sceny: nadpisuje config + miniaturę (bez pytania o nazwę).
+  const handleSaveInPlace = async () => {
+    const { glRef, config } = useStore.getState();
+    if (!sceneId) return;
+    if (!glRef) {
+      setToast({ kind: 'err', text: 'Renderer niedostępny — spróbuj ponownie.' });
+      return;
+    }
+    setSaveBusy(true);
+    setToast(null);
+    try {
+      await updateSceneInPlace(sceneId, config, glRef);
+      setToast({ kind: 'ok', text: 'Zapisano zmiany.' });
+    } catch (e) {
+      setToast({ kind: 'err', text: e instanceof Error ? e.message : 'Błąd zapisu.' });
+    } finally {
+      setSaveBusy(false);
+    }
+  };
 
   return (
     <div className="layout">
@@ -54,18 +88,32 @@ export default function App({
           <div style={{ display: 'flex', gap: 6 }}>
             <button
               type="button"
-              onClick={() => setSaveMode('scene')}
+              onClick={() => (sceneId ? handleSaveInPlace() : setSaveMode('scene'))}
               className="icon-btn"
-              title="Zapisz scenę"
-              aria-label="Zapisz scenę"
+              disabled={saveBusy}
+              title={sceneId ? 'Zapisz — nadpisz tę scenę' : 'Zapisz scenę'}
+              aria-label={sceneId ? 'Zapisz — nadpisz tę scenę' : 'Zapisz scenę'}
             >
               <IconSave />
             </button>
+            {sceneId && (
+              <button
+                type="button"
+                onClick={() => setSaveMode('scene')}
+                className="icon-btn"
+                disabled={saveBusy}
+                title="Zapisz jako nową scenę (kopia)"
+                aria-label="Zapisz jako nową scenę"
+              >
+                <IconSaveAs />
+              </button>
+            )}
             {isAdmin && (
               <button
                 type="button"
                 onClick={() => setSaveMode('preset')}
                 className="icon-btn"
+                disabled={saveBusy}
                 title="Zapisz jako preset"
                 aria-label="Zapisz jako preset"
               >
@@ -93,12 +141,19 @@ export default function App({
       {saveMode && (
         <SaveSceneDialog
           preset={saveMode === 'preset'}
+          defaultTitle={saveMode === 'scene' && sceneId && sceneTitle ? `${sceneTitle} (kopia)` : ''}
           onClose={() => setSaveMode(null)}
         />
       )}
 
       {shareOpen && sceneId && (
         <ShareDialog sceneId={sceneId} onClose={() => setShareOpen(false)} />
+      )}
+
+      {toast && (
+        <div className={`save-toast save-toast--${toast.kind}`} role="status">
+          {toast.text}
+        </div>
       )}
     </div>
   );

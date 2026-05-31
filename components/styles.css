@@ -454,7 +454,24 @@ html, body, #root {
   transition: background 120ms;
 }
 .icon-btn:hover { background: #f5c200; }
+.icon-btn:disabled { opacity: 0.5; cursor: default; }
 .icon-btn svg { width: 16px; height: 16px; }
+
+/* --- Save confirmation / error toast --- */
+.save-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.save-toast--ok { background: var(--ok, #34d399); color: #08110c; }
+.save-toast--err { background: var(--danger, #f87171); color: #2a0a0a; }
 
 /* --- Save Scene dialog overlay --- */
 .save-scene-overlay {

@@ -11,6 +11,8 @@ interface SaveSceneDialogProps {
   onClose: () => void;
   /** true = zapis jako preset (admin-only, egzekwowane też serwerowo) */
   preset?: boolean;
+  /** Wstępna nazwa (np. „<tytuł> (kopia)" przy „Zapisz jako"). */
+  defaultTitle?: string;
 }
 
 /**
@@ -18,13 +20,13 @@ interface SaveSceneDialogProps {
  * Renderowany poza drzewem <Canvas>. Dostęp do WebGLRenderer przez store.glRef
  * (rejestrowany w onCreated callbacku Canvas w Viewer.tsx).
  */
-export function SaveSceneDialog({ onClose, preset = false }: SaveSceneDialogProps) {
+export function SaveSceneDialog({ onClose, preset = false, defaultTitle = '' }: SaveSceneDialogProps) {
   const router = useRouter();
   const config = useStore((s) => s.config);
   const loadedModel = useStore((s) => s.loadedModel);
   const glRef = useStore((s) => s.glRef);
 
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(defaultTitle);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

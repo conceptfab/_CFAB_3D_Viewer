@@ -37,5 +37,11 @@ export function ExistingSceneEditor({ scene, isAdmin = false, isOwner = false }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene.id]);
 
-  return <EditorApp isAdmin={isAdmin} sceneId={isOwner ? scene.id : undefined} />;
+  return (
+    <EditorApp
+      isAdmin={isAdmin}
+      sceneId={isOwner ? scene.id : undefined}
+      sceneTitle={scene.title}
+    />
+  );
 }
