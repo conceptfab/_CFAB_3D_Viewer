@@ -133,10 +133,10 @@ describe('deleteScene', () => {
           where: vi.fn().mockResolvedValue([mockSceneRecord]),
         }),
       })
-      // countShared: 0 innych scen z tym modelem
+      // countShared: 0 innych scen z tym modelem (countModelReferences zwraca rows.length)
       .mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ count: 0 }]),
+          where: vi.fn().mockResolvedValue([]),
         }),
       });
 
@@ -163,10 +163,10 @@ describe('deleteScene', () => {
           where: vi.fn().mockResolvedValue([mockSceneRecord]),
         }),
       })
-      // countShared: 1 inna scena współdzieli ten model
+      // countShared: 1 inna scena współdzieli ten model (countModelReferences zwraca rows.length)
       .mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ count: 1 }]),
+          where: vi.fn().mockResolvedValue([{ id: 'other-scene' }]),
         }),
       });
 

@@ -1,5 +1,5 @@
 // lib/scenes/repo.ts
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, ne, sql } from 'drizzle-orm';
 import { del } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { scenes } from './schema';
@@ -101,16 +101,7 @@ export async function deleteScene(id: string): Promise<void> {
   // Ref-count: ile innych scen używa tego samego model_blob_url?
   let sharedModelCount = 0;
   if (scene.modelBlobUrl) {
-    const countRows = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(scenes)
-      .where(
-        and(
-          eq(scenes.modelBlobUrl, scene.modelBlobUrl),
-          sql`${scenes.id} != ${id}`
-        )
-      );
-    sharedModelCount = Number(countRows[0]?.count ?? 0);
+    sharedModelCount = await countModelReferences(scene.modelBlobUrl, id);
   }
 
   // Usuń rekord z DB.
@@ -125,6 +116,76 @@ export async function deleteScene(id: string): Promise<void> {
   if (scene.modelBlobUrl && sharedModelCount === 0) {
     await del(scene.modelBlobUrl);
   }
+}
+
+// ─── NOWE W ETAPIE C ─────────────────────────────────────────────────────────
+
+/**
+ * Zlicza ile scen w DB wskazuje na dany model_blob_url (poza podanym sceneId).
+ * Używane przez DELETE do decyzji o skasowaniu pliku z Blob (ref-count).
+ */
+export async function countModelReferences(
+  modelBlobUrl: string,
+  excludeSceneId: string
+): Promise<number> {
+  const rows = await db
+    .select({ id: scenes.id })
+    .from(scenes)
+    .where(
+      and(
+        eq(scenes.modelBlobUrl, modelBlobUrl),
+        ne(scenes.id, excludeSceneId)
+      )
+    );
+  return rows.length;
+}
+
+/**
+ * Klonuje preset na nową scenę należącą do `newOwnerId`.
+ * - Nowa scena: is_preset=false, owner_id=newOwnerId
+ * - Współdzieli model_blob_url, model_file_name i thumb_blob_url (nie kopiuje pliku w Blob)
+ * - Tytuł klonu: `${preset.title} (kopia)`
+ *
+ * Rzuca Error jeśli rekord nie istnieje lub nie jest presetem.
+ */
+export async function instantiatePreset(
+  presetId: string,
+  newOwnerId: string
+): Promise<SceneRecord> {
+  // 1. Wczytaj preset
+  const rows = await db
+    .select()
+    .from(scenes)
+    .where(eq(scenes.id, presetId));
+
+  if (rows.length === 0) {
+    throw new Error('Preset nie istnieje');
+  }
+
+  const preset = rows[0];
+
+  if (!preset.isPreset) {
+    throw new Error('Scena nie jest presetem');
+  }
+
+  // 2. Wstaw klon
+  const now = new Date();
+  const [inserted] = await db
+    .insert(scenes)
+    .values({
+      ownerId: newOwnerId,
+      title: `${preset.title} (kopia)`,
+      config: preset.config,
+      modelBlobUrl: preset.modelBlobUrl,        // współdzielony URL — bez duplikowania pliku
+      modelFileName: preset.modelFileName,
+      thumbBlobUrl: preset.thumbBlobUrl,        // współdzielony — decyzja 3: kopiuj URL
+      isPreset: false,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+
+  return rowToRecord(inserted);
 }
 
 // ─── Mapper ────────────────────────────────────────────────────────────────
