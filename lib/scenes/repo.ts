@@ -1,5 +1,5 @@
 // lib/scenes/repo.ts
-import { eq, and, ne, sql } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import { del } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { scenes } from './schema';
