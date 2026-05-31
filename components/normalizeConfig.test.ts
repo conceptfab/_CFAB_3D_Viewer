@@ -3,7 +3,7 @@ import { DEFAULT_CONFIG, normalizeConfig } from './store';
 
 describe('normalizeConfig', () => {
   it('fills keyLight.target and antialiasing when missing (legacy scene)', () => {
-    const legacy = structuredClone(DEFAULT_CONFIG) as Record<string, unknown>;
+    const legacy = structuredClone(DEFAULT_CONFIG) as unknown as Record<string, unknown>;
     delete (legacy.keyLight as Record<string, unknown>).target;
     delete legacy.antialiasing;
 
