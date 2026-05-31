@@ -38,12 +38,18 @@ export function SaveSceneDialog({ onClose, preset = false, defaultTitle = '' }: 
     // Model wymagany TYLKO dla sceny. Preset = sam config (światło, kamery, tło,
     // branding…) — model wczytuje się dopiero przy użyciu presetu jako nowej sceny.
     const modelFile = loadedModel?.file ?? null;
-    const existingModelUrl =
-      loadedModel && !loadedModel.file && loadedModel.objectUrl.startsWith('https://')
+    const remoteModelUrl =
+      loadedModel && !loadedModel.file && /^https?:\/\//.test(loadedModel.objectUrl)
         ? loadedModel.objectUrl
         : null;
-    if (!preset && !modelFile && !existingModelUrl) {
+    if (!preset && !loadedModel) {
       setError('Załaduj model .glb przed zapisem sceny.');
+      return;
+    }
+    if (!preset && !modelFile && !remoteModelUrl) {
+      // Model JEST wczytany, ale nie mamy z czego go wysłać (np. blob: bez Pliku
+      // po przeładowaniu strony) — komunikat mówi prawdę, nie „brak modelu".
+      setError('Model jest wczytany, ale jego dane nie są dostępne do wysłania — przeciągnij plik .glb ponownie.');
       return;
     }
     if (!glRef) {
@@ -60,7 +66,7 @@ export function SaveSceneDialog({ onClose, preset = false, defaultTitle = '' }: 
       if (!thumbBlob) throw new Error('Nie udało się przechwycić miniatury.');
 
       // 2. Upload miniatury (zawsze) + modelu (świeży plik / istniejący URL; preset bez modelu → null).
-      const { modelBlobUrl, thumbBlobUrl } = await uploadAssets(modelFile, thumbBlob, existingModelUrl);
+      const { modelBlobUrl, thumbBlobUrl } = await uploadAssets(modelFile, thumbBlob, remoteModelUrl);
 
       // 3. Zapis przez API.
       const response = await fetch('/api/scenes', {
