@@ -51,6 +51,8 @@ interface AuditOpts {
   /** Bieżący czas (ms) — wstrzykiwalny dla testów. Domyślnie Date.now(). */
   now?: number;
   safetyWindowHours?: number;
+  /** Admin: pomiń okno bezpieczeństwa przy kasowaniu (świeże sieroty też). */
+  ignoreSafetyWindow?: boolean;
 }
 
 function kindFromPath(pathname: string): OrphanKind {
@@ -134,7 +136,7 @@ export async function deleteOrphanedBlobs(
       skipped.push({ url, reason: 'not-orphan' });
       continue;
     }
-    if (!o.deletable) {
+    if (!o.deletable && !opts.ignoreSafetyWindow) {
       skipped.push({ url, reason: 'too-recent' });
       continue;
     }

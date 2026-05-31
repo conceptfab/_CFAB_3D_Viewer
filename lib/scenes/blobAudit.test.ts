@@ -158,6 +158,24 @@ describe('deleteOrphanedBlobs', () => {
     expect(result.skipped[0]).toMatchObject({ url: fresh.url, reason: 'too-recent' });
   });
 
+  it('ignoreSafetyWindow kasuje świeżą sierotę', async () => {
+    const { list, del } = await import('@vercel/blob');
+    const { getReferencedBlobUrls } = await import('./repo');
+    const fresh = blob('models/fresh.glb', 500, hoursAgo(1));
+
+    (getReferencedBlobUrls as any).mockResolvedValue(new Set());
+    (list as any).mockResolvedValue({ blobs: [fresh], hasMore: false });
+
+    const result = await deleteOrphanedBlobs([fresh.url], {
+      now: NOW,
+      safetyWindowHours: 24,
+      ignoreSafetyWindow: true,
+    });
+
+    expect(del).toHaveBeenCalledWith(fresh.url);
+    expect(result.deleted).toEqual([fresh.url]);
+  });
+
   it('błąd del() nie przerywa reszty — zgłoszony jako delete-failed (best-effort)', async () => {
     const { list, del } = await import('@vercel/blob');
     const { getReferencedBlobUrls } = await import('./repo');

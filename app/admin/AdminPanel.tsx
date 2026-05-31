@@ -111,19 +111,30 @@ export default function AdminPanel({
   }
 
   function toggleAllOrphans() {
-    setSelected((prev) => (prev.size === deletableUrls.length ? new Set() : new Set(deletableUrls)));
+    setSelected((prev) =>
+      prev.size === allOrphanUrls.length ? new Set() : new Set(allOrphanUrls)
+    );
   }
 
   async function deleteSelectedOrphans() {
     if (selected.size === 0) return;
-    if (!confirm(`Usunąć ${selected.size} plik(ów) z Blob? Tej operacji nie można cofnąć.`)) return;
+    const selectedList = orphans?.orphans.filter((o) => selected.has(o.url)) ?? [];
+    const freshCount = selectedList.filter((o) => !o.deletable).length;
+    const confirmMsg =
+      freshCount > 0
+        ? `Usunąć ${selected.size} plik(ów)? W tym ${freshCount} świeżych (młodszych niż ${orphans?.safetyWindowHours ?? 24} godz.) — mogą być jeszcze potrzebne przy zapisie sceny. Kontynuować mimo to? Tej operacji nie można cofnąć.`
+        : `Usunąć ${selected.size} plik(ów) z Blob? Tej operacji nie można cofnąć.`;
+    if (!confirm(confirmMsg)) return;
     setDeleting(true);
     setOrphansError(null);
     try {
       const res = await fetch('/api/admin/blobs', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls: Array.from(selected) }),
+        body: JSON.stringify({
+          urls: Array.from(selected),
+          forceRecent: freshCount > 0,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? `Błąd kasowania: ${res.status}`);
@@ -136,7 +147,9 @@ export default function AdminPanel({
     }
   }
 
-  const deletableUrls = orphans ? orphans.orphans.filter((o) => o.deletable).map((o) => o.url) : [];
+  const allOrphanUrls = orphans ? orphans.orphans.map((o) => o.url) : [];
+  const deletableCount = orphans ? orphans.orphans.filter((o) => o.deletable).length : 0;
+  const freshCount = orphans ? orphans.recentSkipped : 0;
 
   return (
     <main style={styles.container}>
@@ -257,9 +270,18 @@ export default function AdminPanel({
               Łącznie {formatBytes(orphans.summary.bytes)} do odzyskania
               {` · modele: ${orphans.summary.byKind.model.count}`}
               {` · miniatury: ${orphans.summary.byKind.thumbnail.count}`}
-              {orphans.recentSkipped > 0 &&
-                ` · świeżych pominiętych: ${orphans.recentSkipped} (młodsze niż ${orphans.safetyWindowHours} godz.)`}
+              {` · kasowalne od razu: ${deletableCount}`}
+              {freshCount > 0 &&
+                ` · świeże (< ${orphans.safetyWindowHours} godz.): ${freshCount}`}
             </p>
+
+            {freshCount > 0 && deletableCount === 0 && (
+              <p style={styles.blobHint}>
+                Wszystkie pliki są w oknie bezpieczeństwa ({orphans.safetyWindowHours} godz.).
+                Możesz je zaznaczyć i usunąć — przy kasowaniu świeżych plików pojawi się
+                dodatkowe potwierdzenie.
+              </p>
+            )}
 
             <div style={{ marginBottom: 12 }}>
               <button
@@ -279,10 +301,10 @@ export default function AdminPanel({
                     <th style={styles.th}>
                       <input
                         type="checkbox"
-                        checked={deletableUrls.length > 0 && selected.size === deletableUrls.length}
+                        checked={allOrphanUrls.length > 0 && selected.size === allOrphanUrls.length}
                         onChange={toggleAllOrphans}
-                        disabled={deletableUrls.length === 0}
-                        title="Zaznacz/odznacz wszystkie kasowalne"
+                        disabled={allOrphanUrls.length === 0}
+                        title="Zaznacz/odznacz wszystkie"
                       />
                     </th>
                     <th style={styles.th}>Plik</th>
@@ -299,11 +321,10 @@ export default function AdminPanel({
                           type="checkbox"
                           checked={selected.has(o.url)}
                           onChange={() => toggleOrphan(o.url)}
-                          disabled={!o.deletable}
                           title={
                             o.deletable
                               ? 'Zaznacz do usunięcia'
-                              : `Świeży — pomijany (młodszy niż ${orphans.safetyWindowHours} godz.)`
+                              : `Świeży (< ${orphans.safetyWindowHours} godz.) — wymaga potwierdzenia przy kasowaniu`
                           }
                         />
                       </td>
@@ -369,5 +390,15 @@ const styles: Record<string, React.CSSProperties> = {
   blobHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   blobEmpty: { fontSize: 14, color: 'var(--muted)', margin: 0 },
   blobSummary: { fontSize: 13, color: 'var(--muted)', margin: '0 0 14px' },
+  blobHint: {
+    fontSize: 13,
+    color: 'var(--ink)',
+    margin: '0 0 14px',
+    padding: '10px 12px',
+    background: 'rgba(245, 158, 11, 0.12)',
+    borderRadius: 8,
+    border: '1px solid rgba(245, 158, 11, 0.35)',
+    lineHeight: 1.5,
+  },
   blobFresh: { color: 'var(--muted)', fontSize: 11 },
 };

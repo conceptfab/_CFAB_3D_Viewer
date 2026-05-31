@@ -17,6 +17,8 @@ export async function GET(): Promise<NextResponse> {
 // referencjonowany lub zbyt świeży URL nie zostanie skasowany. Admin-only.
 const DeleteSchema = z.object({
   urls: z.array(z.url()).min(1),
+  /** Pomiń 24h okno bezpieczeństwa — tylko admin, po świadomym potwierdzeniu w UI. */
+  forceRecent: z.boolean().optional(),
 });
 
 export async function DELETE(request: Request): Promise<NextResponse> {
@@ -37,6 +39,8 @@ export async function DELETE(request: Request): Promise<NextResponse> {
     );
   }
 
-  const result = await deleteOrphanedBlobs(parsed.data.urls);
+  const result = await deleteOrphanedBlobs(parsed.data.urls, {
+    ignoreSafetyWindow: parsed.data.forceRecent === true,
+  });
   return NextResponse.json(result);
 }

@@ -76,7 +76,29 @@ describe('DELETE /api/admin/blobs', () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.deleted).toEqual(['https://b/models/x.glb']);
-    expect(deleteOrphanedBlobs).toHaveBeenCalledWith(['https://b/models/x.glb']);
+    expect(deleteOrphanedBlobs).toHaveBeenCalledWith(['https://b/models/x.glb'], {
+      ignoreSafetyWindow: false,
+    });
+  });
+
+  it('forceRecent przekazuje ignoreSafetyWindow do blobAudit', async () => {
+    (deleteOrphanedBlobs as any).mockResolvedValue({ deleted: [], skipped: [] });
+
+    const req = new NextRequest('http://localhost/api/admin/blobs', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        urls: ['https://b/models/x.glb'],
+        forceRecent: true,
+      }),
+    });
+
+    const res = await DELETE(req);
+
+    expect(res.status).toBe(200);
+    expect(deleteOrphanedBlobs).toHaveBeenCalledWith(['https://b/models/x.glb'], {
+      ignoreSafetyWindow: true,
+    });
   });
 
   it('zwraca 422 gdy body nie zawiera tablicy urls', async () => {
