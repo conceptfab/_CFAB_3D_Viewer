@@ -26,7 +26,7 @@ export default async function HomePage() {
   const presets = await listAllPresets();
 
   return (
-    <>
+    <div className="page-scroll">
       <TopNav isAdmin={isAdmin} email={user.email} active="home" />
       <main className="home-page">
       <header className="home-header">
@@ -75,6 +75,6 @@ export default async function HomePage() {
         <SceneGrid initialScenes={scenes} />
       )}
     </main>
-    </>
+    </div>
   );
 }

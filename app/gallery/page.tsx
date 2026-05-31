@@ -18,7 +18,7 @@ export default async function GalleryPage() {
   const scenes = await listAccessible(user.id);
 
   return (
-    <>
+    <div className="page-scroll">
       <TopNav isAdmin={isAdmin} email={user.email} active="gallery" />
       <main className="gallery-page">
       <header className="gallery-header">
@@ -47,6 +47,6 @@ export default async function GalleryPage() {
         </div>
       )}
     </main>
-    </>
+    </div>
   );
 }

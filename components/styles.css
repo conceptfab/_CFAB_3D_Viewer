@@ -51,6 +51,17 @@ html, body, #root {
   overflow: hidden;
 }
 
+/* Kontener przewijania dla stron treściowych (panel admina itp.), które
+   renderują TopNav + treść bezpośrednio w body (body ma overflow:hidden).
+   Bez tego treść poniżej ekranu jest ucinana i nieklikalna. TopNav ma
+   position:sticky, więc przykleja się u góry tego kontenera. */
+.page-scroll {
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 #root {
   display: block;
 }
@@ -664,7 +675,7 @@ html, body, #root {
 .save-scene-actions .save-scene-primary:hover:not(:disabled) { background: var(--accent-hover); }
 
 /* --- Home page: scene grid --- */
-.home-page { padding: 2rem; max-width: 1200px; margin: 0 auto; overflow-y: auto; height: 100vh; box-sizing: border-box; }
+.home-page { padding: 2rem; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }
 .home-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
 .home-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--ink); }
 .home-btn-new { background: var(--accent); color: var(--accent-ink); padding: 0.5rem 1.25rem;

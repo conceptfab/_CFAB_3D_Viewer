@@ -25,13 +25,13 @@ export default async function AdminPage() {
   }
 
   return (
-    <>
+    <div className="page-scroll">
       <TopNav isAdmin email={admin.email} active="admin" />
       <AdminPanel
         initialUsers={allUsers}
         initialOrphans={initialOrphans}
         initialOrphansError={initialOrphansError}
       />
-    </>
+    </div>
   );
 }
