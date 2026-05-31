@@ -2,13 +2,19 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/session';
-import { createScene, listScenes, listAllPresets } from '@/lib/scenes/repo';
+import { createScene, listAllPresets, listAccessible } from '@/lib/scenes/repo';
 import type { SceneConfig } from '@/components/store';
 
 // ─── GET /api/scenes?preset=0|1 ─────────────────────────────────────────────
 
 export async function GET(request: Request): Promise<NextResponse> {
-  const user = await requireUser();
+  let user;
+  try {
+    user = await requireUser();
+  } catch {
+    return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const presetParam = searchParams.get('preset');
 
@@ -18,8 +24,8 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json(scenes);
   }
 
-  // Domyślnie: własne sceny użytkownika (is_preset=false)
-  const scenes = await listScenes(user.id, { preset: false });
+  // Etap D: galeria = własne + udostępnione mi (listAccessible)
+  const scenes = await listAccessible(user.id);
   return NextResponse.json(scenes);
 }
 

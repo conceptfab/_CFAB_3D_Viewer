@@ -1,8 +1,9 @@
 // app/api/scenes/[id]/route.ts
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireUser } from '@/lib/auth/session';
+import { requireUser, getCurrentUser } from '@/lib/auth/session';
 import { getScene, updateScene, deleteScene } from '@/lib/scenes/repo';
+import { canView, assertCanEdit } from '@/lib/scenes/access';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -10,13 +11,23 @@ type Ctx = { params: Promise<{ id: string }> };
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ─── GET /api/scenes/[id] ────────────────────────────────────────────────────
+// Etap D: właściciel | uprawnienie per-scena (canView). Nie obsługuje share-tokena
+// (publiczny dostęp przez token jest przez strony /s/[token], nie ten endpoint).
 
 export async function GET(_req: Request, ctx: Ctx): Promise<NextResponse> {
-  const user = await requireUser();
   const { id } = await ctx.params;
 
   if (!UUID_RE.test(id)) {
     return NextResponse.json({ error: 'Nieprawidłowy identyfikator' }, { status: 400 });
+  }
+
+  // getCurrentUser zwraca null gdy brak sesji — canView obsługuje null (token path).
+  // Ten endpoint API nie przenosi share-tokena; anonimowy = 403.
+  let user;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    user = null;
   }
 
   const scene = await getScene(id);
@@ -24,8 +35,8 @@ export async function GET(_req: Request, ctx: Ctx): Promise<NextResponse> {
     return NextResponse.json({ error: 'Nie znaleziono sceny' }, { status: 404 });
   }
 
-  // Etap B: tylko właściciel. Etap D doda uprawnienia per-scena.
-  if (scene.ownerId !== user.id) {
+  const allowed = await canView(scene, user);
+  if (!allowed) {
     return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 });
   }
 
@@ -33,6 +44,7 @@ export async function GET(_req: Request, ctx: Ctx): Promise<NextResponse> {
 }
 
 // ─── PATCH /api/scenes/[id] ──────────────────────────────────────────────────
+// Etap D: właściciel | uprawnienie can_edit (assertCanEdit).
 
 const PatchSceneSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -41,19 +53,28 @@ const PatchSceneSchema = z.object({
 });
 
 export async function PATCH(request: Request, ctx: Ctx): Promise<NextResponse> {
-  const user = await requireUser();
   const { id } = await ctx.params;
 
   if (!UUID_RE.test(id)) {
     return NextResponse.json({ error: 'Nieprawidłowy identyfikator' }, { status: 400 });
   }
 
+  let user;
+  try {
+    user = await requireUser();
+  } catch {
+    return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 });
+  }
+
   const scene = await getScene(id);
   if (!scene) {
     return NextResponse.json({ error: 'Nie znaleziono sceny' }, { status: 404 });
   }
-  if (scene.ownerId !== user.id) {
-    return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 });
+
+  try {
+    await assertCanEdit(scene, user);
+  } catch {
+    return NextResponse.json({ error: 'Brak uprawnień do edycji' }, { status: 403 });
   }
 
   let body: unknown;
@@ -85,13 +106,20 @@ export async function PATCH(request: Request, ctx: Ctx): Promise<NextResponse> {
 }
 
 // ─── DELETE /api/scenes/[id] ─────────────────────────────────────────────────
+// Etap D: wyłącznie właściciel (can_edit NIE uprawnia do usunięcia).
 
 export async function DELETE(_req: Request, ctx: Ctx): Promise<NextResponse> {
-  const user = await requireUser();
   const { id } = await ctx.params;
 
   if (!UUID_RE.test(id)) {
     return NextResponse.json({ error: 'Nieprawidłowy identyfikator' }, { status: 400 });
+  }
+
+  let user;
+  try {
+    user = await requireUser();
+  } catch {
+    return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 });
   }
 
   const scene = await getScene(id);
@@ -108,8 +136,8 @@ export async function DELETE(_req: Request, ctx: Ctx): Promise<NextResponse> {
       );
     }
   } else if (scene.ownerId !== user.id) {
-    // Zwykłe sceny: tylko właściciel
-    return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 });
+    // Zwykłe sceny: wyłącznie właściciel — can_edit NIE uprawnia do DELETE
+    return NextResponse.json({ error: 'Tylko właściciel może usunąć scenę' }, { status: 403 });
   }
 
   await deleteScene(id);
