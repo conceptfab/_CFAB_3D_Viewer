@@ -30,21 +30,18 @@ export function SaveSceneDialog({ onClose, preset = false }: SaveSceneDialogProp
 
   const handleSave = async () => {
     if (!title.trim()) {
-      setError('Podaj tytuł sceny.');
+      setError(preset ? 'Podaj nazwę presetu.' : 'Podaj tytuł sceny.');
       return;
     }
-    if (!loadedModel) {
-      setError('Załaduj model .glb przed zapisem.');
-      return;
-    }
-    // Świeży plik z dysku → wgrywamy. Scena otwarta z galerii (file=null, objectUrl to
-    // istniejący URL Blob) → reużywamy URL modelu bez ponownego uploadu.
+    // Model wymagany TYLKO dla sceny. Preset = sam config (światło, kamery, tło,
+    // branding…) — model wczytuje się dopiero przy użyciu presetu jako nowej sceny.
+    const modelFile = loadedModel?.file ?? null;
     const existingModelUrl =
-      !loadedModel.file && loadedModel.objectUrl.startsWith('https://')
+      loadedModel && !loadedModel.file && loadedModel.objectUrl.startsWith('https://')
         ? loadedModel.objectUrl
         : null;
-    if (!loadedModel.file && !existingModelUrl) {
-      setError('Załaduj model .glb przed zapisem.');
+    if (!preset && !modelFile && !existingModelUrl) {
+      setError('Załaduj model .glb przed zapisem sceny.');
       return;
     }
     if (!glRef) {
@@ -60,14 +57,10 @@ export function SaveSceneDialog({ onClose, preset = false }: SaveSceneDialogProp
       const thumbBlob = await captureThumbnail(glRef);
       if (!thumbBlob) throw new Error('Nie udało się przechwycić miniatury.');
 
-      // 2. Upload miniatury (zawsze) + modelu (tylko świeży plik; inaczej reużycie URL).
-      const { modelBlobUrl, thumbBlobUrl } = await uploadAssets(
-        loadedModel.file,
-        thumbBlob,
-        existingModelUrl
-      );
+      // 2. Upload miniatury (zawsze) + modelu (świeży plik / istniejący URL; preset bez modelu → null).
+      const { modelBlobUrl, thumbBlobUrl } = await uploadAssets(modelFile, thumbBlob, existingModelUrl);
 
-      // 3. Zapis sceny przez API.
+      // 3. Zapis przez API.
       const response = await fetch('/api/scenes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -75,7 +68,7 @@ export function SaveSceneDialog({ onClose, preset = false }: SaveSceneDialogProp
           title: title.trim(),
           config,
           modelBlobUrl,
-          modelFileName: loadedModel.fileName,
+          modelFileName: loadedModel?.fileName ?? null,
           thumbBlobUrl,
           isPreset: preset,
         }),
@@ -88,8 +81,8 @@ export function SaveSceneDialog({ onClose, preset = false }: SaveSceneDialogProp
 
       const scene = await response.json();
 
-      // 4. Redirect do widoku zapisanej sceny.
-      router.push(`/editor/${scene.id}`);
+      // 4. Preset → strona startowa (lista presetów); scena → edytor zapisanej sceny.
+      router.push(preset ? '/' : `/editor/${scene.id}`);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nieznany błąd zapisu.');
@@ -102,17 +95,22 @@ export function SaveSceneDialog({ onClose, preset = false }: SaveSceneDialogProp
       <div className="save-scene-modal">
         <h2>{preset ? 'Zapisz jako preset' : 'Zapisz scenę'}</h2>
 
-        <label htmlFor="scene-title">Tytuł sceny</label>
+        <label htmlFor="scene-title">{preset ? 'Nazwa presetu' : 'Tytuł sceny'}</label>
         <input
           id="scene-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="np. Krzesło minimalistyczne v1"
+          placeholder={preset ? 'np. Studio — miękkie światło' : 'np. Krzesło minimalistyczne v1'}
           autoFocus
           maxLength={200}
           disabled={saving}
         />
+        {preset && (
+          <p style={{ fontSize: 12, color: '#9aa0ab', margin: '6px 0 0' }}>
+            Preset zapisuje sam układ sceny (światło, kamery, tło, branding) — bez modelu 3D.
+          </p>
+        )}
 
         {error && <p className="save-scene-error">{error}</p>}
 

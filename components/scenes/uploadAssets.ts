@@ -4,7 +4,8 @@
 import { upload } from '@vercel/blob/client';
 
 export interface UploadedAssets {
-  modelBlobUrl: string;
+  /** null gdy zapisujemy preset bez modelu (sam config sceny). */
+  modelBlobUrl: string | null;
   thumbBlobUrl: string;
 }
 
@@ -41,9 +42,8 @@ export async function uploadAssets(
     return { modelBlobUrl: modelResult.url, thumbBlobUrl: thumbResult.url };
   }
 
-  if (!existingModelUrl) {
-    throw new Error('Brak modelu do zapisania.');
-  }
+  // Brak świeżego pliku: scena z galerii → reużyj istniejący URL Blob;
+  // preset bez modelu → modelBlobUrl = null (sam config).
   const thumbResult = await thumbPromise;
-  return { modelBlobUrl: existingModelUrl, thumbBlobUrl: thumbResult.url };
+  return { modelBlobUrl: existingModelUrl ?? null, thumbBlobUrl: thumbResult.url };
 }
