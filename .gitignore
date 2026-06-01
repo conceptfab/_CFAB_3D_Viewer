@@ -45,3 +45,6 @@ pnpm-debug.log*
 # Stray model files at repo root (e.g. METRO.glb dropped in for testing).
 # Intended demo models live under public/models/ and stay tracked.
 /*.glb
+
+# Local glTF import test fixtures (large multi-file models, not part of source).
+_test/
