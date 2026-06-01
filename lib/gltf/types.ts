@@ -40,10 +40,5 @@ export interface ValidationReport {
   totalBytes: number;
 }
 
-/** Wynik załadowania modelu do THREE (loadFromFiles). */
-export interface LoadResult {
-  /** THREE.Group (gltf.scene) — typ luźny, by types.ts nie zależał od three. */
-  scene: unknown;
-  /** Zwalnia wszystkie object-URL-e i dekodery. */
-  dispose: () => void;
-}
+// Typ wyniku ładowania (scene + dispose) żyje razem z loadFromFiles.ts
+// (LoadFromFilesResult), bo zależy od THREE — tutaj go nie duplikujemy.

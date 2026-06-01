@@ -1,4 +1,4 @@
-// app/_dev/gltf-import/page.tsx
+// app/dev/gltf-import/page.tsx
 'use client';
 import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
@@ -44,10 +44,14 @@ export default function GltfImportDevPage() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={async (e) => {
             e.preventDefault();
-            const dt = e.dataTransfer;
-            const file = dt.files?.[0];
-            if (file && file.name.toLowerCase().endsWith('.zip')) handleFs(await fromZip(file));
-            else handleFs(await fromDataTransfer(dt.items));
+            try {
+              const dt = e.dataTransfer;
+              const file = dt.files?.[0];
+              if (file && file.name.toLowerCase().endsWith('.zip')) handleFs(await fromZip(file));
+              else handleFs(await fromDataTransfer(dt.items));
+            } catch (err) {
+              setErr(`Nie udało się odczytać wejścia: ${(err as Error).message}`);
+            }
           }}
           style={{ marginTop: 12, padding: 24, border: '2px dashed #888', textAlign: 'center' }}
         >
