@@ -56,4 +56,12 @@ describe('isJunkPath', () => {
     expect(isJunkPath('source/caravane real.glb')).toBe(false);
     expect(isJunkPath('textures/T_RMAO_5@channels=B.png')).toBe(false);
   });
+  it('wykrywa __MACOSX jako dowolny segment i dotfile w podkatalogu', () => {
+    expect(isJunkPath('a/__MACOSX')).toBe(true);       // ostatni segment
+    expect(isJunkPath('a/__MACOSX/b.png')).toBe(true); // segment pośredni
+    expect(isJunkPath('folder/.hidden')).toBe(true);   // dotfile zagnieżdżony
+  });
+  it('nie daje fałszywego trafienia na nazwę podobną do __MACOSX', () => {
+    expect(isJunkPath('a/__MACOSXfoo.png')).toBe(false);
+  });
 });

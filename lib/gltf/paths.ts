@@ -42,12 +42,13 @@ export function extOf(p: string): string {
 
 const JUNK_BASENAMES = new Set(['.ds_store', 'thumbs.db', 'desktop.ini']);
 
-/** Śmieci do zignorowania: __MACOSX, .DS_Store, Thumbs.db, dotfiles. */
+/** Śmieci do zignorowania: __MACOSX (dowolny segment), .DS_Store, Thumbs.db, dotfiles. */
 export function isJunkPath(p: string): boolean {
-  const n = normalizePath(p);
-  if (n === '__MACOSX' || n.startsWith('__MACOSX/') || n.includes('/__MACOSX/')) return true;
-  const slash = n.lastIndexOf('/');
-  const name = slash === -1 ? n : n.slice(slash + 1);
+  const segments = normalizePath(p).split('/');
+  // __MACOSX jako KTÓRYKOLWIEK segment (folder lub jego dziecko) — bez fałszywych
+  // trafień na nazwy typu „__MACOSXfoo".
+  if (segments.includes('__MACOSX')) return true;
+  const name = segments[segments.length - 1] ?? '';
   if (JUNK_BASENAMES.has(name.toLowerCase())) return true;
   if (name.startsWith('.')) return true;
   return false;
