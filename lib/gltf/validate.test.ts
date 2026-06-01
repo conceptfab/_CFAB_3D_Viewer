@@ -9,7 +9,9 @@ type Entry = { text?: string; bytes?: Uint8Array; size?: number };
 function fsOf(entries: Record<string, Entry>): VirtualFs {
   const m: VirtualFs = new Map();
   for (const [path, e] of Object.entries(entries)) {
-    const blob = e.bytes ? new Blob([e.bytes]) : new Blob([e.text ?? '']);
+    // e.bytes as BlobPart: Uint8Array jest poprawnym BlobPart w runtime; rzutowanie
+    // omija nadmiarową surowość typów lib (Uint8Array<ArrayBufferLike> vs BlobPart).
+    const blob = e.bytes ? new Blob([e.bytes as BlobPart]) : new Blob([e.text ?? '']);
     const size = e.size ?? blob.size;
     const vf: VirtualFile = { path, blob, size };
     m.set(toKey(path), vf);
