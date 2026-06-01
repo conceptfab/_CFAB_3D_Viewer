@@ -127,6 +127,25 @@ describe('validateGltf — .gltf multi-file', () => {
   });
 });
 
+describe('validateGltf — odporność na zniekształcone pola', () => {
+  it('buffers/images o złym typie (np. liczba/null) nie rzucają, dają czysty raport', async () => {
+    const fs = fsOf({
+      'm.gltf': { text: gltf({ asset: { version: '2.0' }, buffers: 42, images: null }) },
+    });
+    const r = await validateGltf(fs, 'm.gltf');
+    expect(r.ok).toBe(true);
+    expect(r.missing).toHaveLength(0);
+  });
+
+  it('extensionsRequired jako string nie generuje fałszywego UNSUPPORTED_EXTENSION', async () => {
+    const fs = fsOf({
+      'm.gltf': { text: gltf({ asset: { version: '2.0' }, extensionsRequired: 'KHR_draco_mesh_compression' }) },
+    });
+    const r = await validateGltf(fs, 'm.gltf');
+    expect(r.issues.some((i) => i.code === 'UNSUPPORTED_EXTENSION')).toBe(false);
+  });
+});
+
 describe('validateGltf — .glb single-file', () => {
   it('OK dla poprawnego GLB; luźna tekstura obok → info UNUSED_FILE', async () => {
     const fs = fsOf({
@@ -141,6 +160,30 @@ describe('validateGltf — .glb single-file', () => {
 
   it('zły nagłówek GLB → fatal PARSE_ERROR', async () => {
     const fs = fsOf({ 'bad.glb': { bytes: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) } });
+    const r = await validateGltf(fs, 'bad.glb');
+    expect(r.ok).toBe(false);
+    expect(r.issues.some((i) => i.code === 'PARSE_ERROR')).toBe(true);
+  });
+
+  it('GLB z zewnętrzną teksturą (images[].uri) rozwiązuje ją względem katalogu roota', async () => {
+    const fs = fsOf({
+      'source/model.glb': { bytes: makeGlb({ asset: { version: '2.0' }, images: [{ uri: '../textures/x.png' }] }) },
+      'textures/x.png': { size: 50 },
+    });
+    const r = await validateGltf(fs, 'source/model.glb');
+    expect(r.ok).toBe(true);
+    expect(r.resolved).toContain('textures/x.png');
+  });
+
+  it('GLB z chunkLen wykraczającym poza plik → fatal PARSE_ERROR (nie RangeError)', async () => {
+    const buf = new ArrayBuffer(20);
+    const dv = new DataView(buf);
+    dv.setUint32(0, 0x46546c67, true); // 'glTF'
+    dv.setUint32(4, 2, true);
+    dv.setUint32(8, 20, true);
+    dv.setUint32(12, 9999, true); // chunkLen >> rozmiar pliku
+    dv.setUint32(16, 0x4e4f534a, true); // 'JSON'
+    const fs = fsOf({ 'bad.glb': { bytes: new Uint8Array(buf) } });
     const r = await validateGltf(fs, 'bad.glb');
     expect(r.ok).toBe(false);
     expect(r.issues.some((i) => i.code === 'PARSE_ERROR')).toBe(true);

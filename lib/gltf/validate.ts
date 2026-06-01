@@ -48,21 +48,26 @@ export async function validateGltf(
     issues.push({ level: 'fatal', code: 'BAD_VERSION', message: `Wymagana wersja glTF 2.0 (znaleziono: ${json?.asset?.version ?? 'brak'}).`, path: rootKey });
   }
 
-  for (const ext of (json?.extensionsRequired ?? [])) {
+  const requiredExts = Array.isArray(json?.extensionsRequired) ? json.extensionsRequired : [];
+  for (const ext of requiredExts) {
     if (!SUPPORTED_REQUIRED_EXTENSIONS.has(ext)) {
       issues.push({ level: 'fatal', code: 'UNSUPPORTED_EXTENSION', message: `Niewspierane wymagane rozszerzenie: ${ext}.` });
     }
   }
 
   // Referencje zewnętrzne: buffers[].uri + images[].uri (pomijamy data:).
+  // Array.isArray chroni przed glTF z błędnym typem pola (np. "buffers": 42) —
+  // bez tego for..of rzuciłby niełapany TypeError poza try/catch.
   const baseDir = dirOf(rootKey);
   const refs: Array<{ uri: string; type: 'buffer' | 'image' }> = [];
-  for (const b of (json?.buffers ?? [])) if (typeof b?.uri === 'string') refs.push({ uri: b.uri, type: 'buffer' });
-  for (const im of (json?.images ?? [])) if (typeof im?.uri === 'string') refs.push({ uri: im.uri, type: 'image' });
+  const buffers = Array.isArray(json?.buffers) ? json.buffers : [];
+  const images = Array.isArray(json?.images) ? json.images : [];
+  for (const b of buffers) if (typeof b?.uri === 'string') refs.push({ uri: b.uri, type: 'buffer' });
+  for (const im of images) if (typeof im?.uri === 'string') refs.push({ uri: im.uri, type: 'image' });
 
   const referencedKeys = new Set<string>();
   for (const ref of refs) {
-    if (ref.uri.startsWith('data:')) continue;
+    if (ref.uri.toLowerCase().startsWith('data:')) continue;
     let decoded = ref.uri;
     try { decoded = decodeURIComponent(ref.uri); } catch { /* zostaw surowy */ }
     const key = toKey(joinRelative(baseDir, decoded));
@@ -102,9 +107,11 @@ async function parseGlbJson(blob: Blob): Promise<any> {
   if (buf.byteLength < 20) throw new Error('Plik GLB za krótki.');
   const dv = new DataView(buf);
   if (dv.getUint32(0, true) !== GLB_MAGIC) throw new Error('Nieprawidłowy nagłówek GLB (magic).');
+  if (dv.getUint32(4, true) !== 2) throw new Error('Nieobsługiwana wersja kontenera GLB (wymagana 2).');
   const chunkLen = dv.getUint32(12, true);
   const chunkType = dv.getUint32(16, true);
   if (chunkType !== GLB_CHUNK_JSON) throw new Error('Pierwszy chunk GLB nie jest typu JSON.');
+  if (20 + chunkLen > buf.byteLength) throw new Error('Chunk JSON GLB wykracza poza rozmiar pliku.');
   const jsonBytes = new Uint8Array(buf, 20, chunkLen);
   return JSON.parse(new TextDecoder().decode(jsonBytes));
 }
