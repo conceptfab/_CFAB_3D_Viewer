@@ -427,34 +427,63 @@ function LightTargetControls() {
 /* --- Materiał (override per indeks) --- */
 function MaterialControls({ matKey }: { matKey: string }) {
   const info = useStore.getState().studioMaterials.find((m) => m.key === matKey);
-  const ov = useStore.getState().config.materialOverrides[matKey] ?? {};
   const base = info?.base ?? {};
-  const set = (patch: MaterialOverride) =>
-    useStore.getState().setMaterialOverride(matKey, patch);
+  const write = (patch: MaterialOverride) => useStore.getState().setMaterialOverride(matKey, patch);
 
-  useControls(
+  // Efektywne wartości pól (override ?? oryginał ?? fallback) — wspólne dla
+  // wartości początkowych i synchronizacji store→leva (Reset / wczytanie sceny).
+  const fields = (o: MaterialOverride): Record<string, unknown> => {
+    const f: Record<string, unknown> = {
+      color: o.color ?? base.color ?? '#ffffff',
+      metalness: o.metalness ?? base.metalness ?? 0,
+      roughness: o.roughness ?? base.roughness ?? 1,
+      emissive: o.emissive ?? base.emissive ?? '#000000',
+      emissiveIntensity: o.emissiveIntensity ?? base.emissiveIntensity ?? 1,
+      opacity: o.opacity ?? base.opacity ?? 1,
+      transparent: o.transparent ?? base.transparent ?? false,
+    };
+    if (info?.hasNormalMap) f.normalScale = o.normalScale ?? base.normalScale ?? 1;
+    if (info?.hasClearcoat) {
+      f.clearcoat = o.clearcoat ?? base.clearcoat ?? 0;
+      f.clearcoatRoughness = o.clearcoatRoughness ?? base.clearcoatRoughness ?? 0;
+    }
+    return f;
+  };
+  const init = fields(useStore.getState().config.materialOverrides[matKey] ?? {});
+
+  const [, set] = useControls(
     `Materiał: ${info?.name ?? matKey}`,
     () => ({
-      color: { value: ov.color ?? base.color ?? '#ffffff', onChange: (v: string) => set({ color: v }) },
-      metalness: { value: ov.metalness ?? base.metalness ?? 0, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ metalness: v }) },
-      roughness: { value: ov.roughness ?? base.roughness ?? 1, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ roughness: v }) },
-      emissive: { value: ov.emissive ?? base.emissive ?? '#000000', onChange: (v: string) => set({ emissive: v }) },
-      emissiveIntensity: { value: ov.emissiveIntensity ?? base.emissiveIntensity ?? 1, min: 0, max: 5, step: 0.01, onChange: (v: number) => set({ emissiveIntensity: v }) },
-      opacity: { value: ov.opacity ?? base.opacity ?? 1, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ opacity: v }) },
-      transparent: { value: ov.transparent ?? base.transparent ?? false, onChange: (v: boolean) => set({ transparent: v }) },
+      color: { value: init.color as string, onChange: (v: string) => write({ color: v }) },
+      metalness: { value: init.metalness as number, min: 0, max: 1, step: 0.01, onChange: (v: number) => write({ metalness: v }) },
+      roughness: { value: init.roughness as number, min: 0, max: 1, step: 0.01, onChange: (v: number) => write({ roughness: v }) },
+      emissive: { value: init.emissive as string, onChange: (v: string) => write({ emissive: v }) },
+      emissiveIntensity: { value: init.emissiveIntensity as number, min: 0, max: 5, step: 0.01, onChange: (v: number) => write({ emissiveIntensity: v }) },
+      opacity: { value: init.opacity as number, min: 0, max: 1, step: 0.01, onChange: (v: number) => write({ opacity: v }) },
+      transparent: { value: init.transparent as boolean, onChange: (v: boolean) => write({ transparent: v }) },
       ...(info?.hasNormalMap
-        ? { normalScale: { value: ov.normalScale ?? base.normalScale ?? 1, min: 0, max: 2, step: 0.01, onChange: (v: number) => set({ normalScale: v }) } }
+        ? { normalScale: { value: init.normalScale as number, min: 0, max: 2, step: 0.01, onChange: (v: number) => write({ normalScale: v }) } }
         : {}),
       ...(info?.hasClearcoat
         ? {
-            clearcoat: { value: ov.clearcoat ?? base.clearcoat ?? 0, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ clearcoat: v }) },
-            clearcoatRoughness: { value: ov.clearcoatRoughness ?? base.clearcoatRoughness ?? 0, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ clearcoatRoughness: v }) },
+            clearcoat: { value: init.clearcoat as number, min: 0, max: 1, step: 0.01, onChange: (v: number) => write({ clearcoat: v }) },
+            clearcoatRoughness: { value: init.clearcoatRoughness as number, min: 0, max: 1, step: 0.01, onChange: (v: number) => write({ clearcoatRoughness: v }) },
           }
         : {}),
       'Reset materiału': button(() => useStore.getState().resetMaterialOverride(matKey)),
     }),
     [matKey]
   );
+
+  // Store → leva: zmiana override poza panelem (Reset, wczytanie sceny) odświeża suwaki.
+  // set() leva nie wywołuje onChange → bez pętli.
+  useEffect(() => {
+    return useStore.subscribe((s, prev) => {
+      if (s.config.materialOverrides[matKey] === prev.config.materialOverrides[matKey]) return;
+      set(fields(s.config.materialOverrides[matKey] ?? {}));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matKey, set]);
   return null;
 }
 
