@@ -204,6 +204,26 @@ describe('nowy stan edytora + settery', () => {
   });
 });
 
+describe('material overrides (Etap 2)', () => {
+  beforeEach(() => {
+    useStore.setState({ config: structuredClone(DEFAULT_CONFIG), studioMaterials: [] });
+  });
+  it('setMaterialOverride merge\'uje per klucz', () => {
+    useStore.getState().setMaterialOverride('0', { metalness: 0.5 });
+    useStore.getState().setMaterialOverride('0', { roughness: 0.2 });
+    expect(useStore.getState().config.materialOverrides['0']).toEqual({ metalness: 0.5, roughness: 0.2 });
+  });
+  it('resetMaterialOverride usuwa klucz', () => {
+    useStore.getState().setMaterialOverride('1', { color: '#fff' });
+    useStore.getState().resetMaterialOverride('1');
+    expect(useStore.getState().config.materialOverrides['1']).toBeUndefined();
+  });
+  it('setStudioMaterials ustawia listę', () => {
+    useStore.getState().setStudioMaterials([{ key: '0', name: 'A', hasNormalMap: false, hasClearcoat: false, base: {} }]);
+    expect(useStore.getState().studioMaterials).toHaveLength(1);
+  });
+});
+
 describe('materialOverrides + applyPreset + studio slice (Studio)', () => {
   beforeEach(() => {
     useStore.setState({

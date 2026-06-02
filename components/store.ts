@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Group } from 'three';
 import type { VirtualFs } from '@/lib/gltf/types';
+import type { MaterialOverride, MaterialInfo } from '@/lib/studio/materials';
 
 export type ToneMode = 'NEUTRAL' | 'ACES_FILMIC' | 'AGX' | 'REINHARD';
 
@@ -79,7 +80,7 @@ export interface SceneConfig {
   material: { envMapIntensity: number };
   /** Nie-destrukcyjne nadpisania materiałów per indeks materiału glTF.
    *  Pusty w Etapie 1; pełny kształt dopina Etap 2 (edytor materiałów). */
-  materialOverrides: Record<string, unknown>;
+  materialOverrides: Record<string, MaterialOverride>;
   antialiasing: AntialiasingMode;
   // Plakietka brandingowa w lewym górnym rogu finalnego widoku.
   branding: {
@@ -271,6 +272,10 @@ interface State {
   studioDispose: (() => void) | null;
   /** Ustawia (lub czyści) komplet importu Studio. */
   setStudioImport: (data: { scene: Group; vfs: VirtualFs; root: string; dispose?: () => void } | null) => void;
+  setMaterialOverride: (key: string, patch: MaterialOverride) => void;
+  resetMaterialOverride: (key: string) => void;
+  studioMaterials: MaterialInfo[];
+  setStudioMaterials: (m: MaterialInfo[]) => void;
 
   setAntialiasing: (mode: AntialiasingMode) => void;
   setBranding: (patch: Partial<SceneConfig['branding']>) => void;
@@ -360,6 +365,24 @@ export const useStore = create<State>((set, get) => ({
         : { studioScene: null, studioVfs: null, studioRoot: null, studioDispose: null }
     );
   },
+  setMaterialOverride: (key, patch) =>
+    set((s) => ({
+      config: {
+        ...s.config,
+        materialOverrides: {
+          ...s.config.materialOverrides,
+          [key]: { ...(s.config.materialOverrides[key] ?? {}), ...patch },
+        },
+      },
+    })),
+  resetMaterialOverride: (key) =>
+    set((s) => {
+      const next = { ...s.config.materialOverrides };
+      delete next[key];
+      return { config: { ...s.config, materialOverrides: next } };
+    }),
+  studioMaterials: [],
+  setStudioMaterials: (studioMaterials) => set({ studioMaterials }),
 
   setAntialiasing: (mode) =>
     set((s) => ({ config: { ...s.config, antialiasing: mode } })),
