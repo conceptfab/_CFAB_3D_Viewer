@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useStore } from '../store';
+import { collectMaterials, buildMaterialInfos, applyOverride, restoreMaterial } from '@/lib/studio/materials';
 
 /** Wczytany model Studio (gotowy THREE.Group z loadFromFiles): klon + auto-fit/center
  *  + envMapIntensity + anizotropia + cienie. Publikuje modelSize. */
@@ -10,6 +11,8 @@ export function StudioActor({ scene }: { scene: THREE.Group }) {
   const envMapIntensity = useStore((s) => s.config.material.envMapIntensity);
   const setModelSize = useStore((s) => s.setModelSize);
   const setSelected = useStore((s) => s.setSelected);
+  const materialOverrides = useStore((s) => s.config.materialOverrides);
+  const setStudioMaterials = useStore((s) => s.setStudioMaterials);
   const ref = useRef<THREE.Group>(null);
 
   const cloned = useMemo(() => {
@@ -32,6 +35,21 @@ export function StudioActor({ scene }: { scene: THREE.Group }) {
     });
     return c;
   }, [scene]);
+
+  const mats = useMemo(() => collectMaterials(cloned as unknown as { traverse: (cb: (o: unknown) => void) => void }), [cloned]);
+  const infos = useMemo(() => buildMaterialInfos(mats), [mats]);
+
+  useEffect(() => {
+    setStudioMaterials(infos);
+    return () => setStudioMaterials([]);
+  }, [infos, setStudioMaterials]);
+
+  useEffect(() => {
+    mats.forEach((m, i) => {
+      restoreMaterial(m, infos[i].base);
+      applyOverride(m, materialOverrides[String(i)]);
+    });
+  }, [mats, infos, materialOverrides]);
 
   useEffect(() => {
     cloned.traverse((o) => {
