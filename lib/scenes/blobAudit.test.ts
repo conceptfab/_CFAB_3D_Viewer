@@ -9,6 +9,9 @@ vi.mock('@vercel/blob', () => ({
 vi.mock('./repo', () => ({
   getReferencedBlobUrls: vi.fn(),
 }));
+vi.mock('@/lib/studio/repo', () => ({
+  getStudioReferencedBlobUrls: vi.fn().mockResolvedValue(new Set()),
+}));
 
 import { findOrphanedBlobs, deleteOrphanedBlobs, pruneOrphanReport } from './blobAudit';
 
@@ -109,6 +112,30 @@ describe('findOrphanedBlobs', () => {
 
     expect(report.orphans.map((o) => o.url)).toEqual([big.url, small.url]);
   });
+
+  it('blob sources/ bez referencji → sierota rodzaju "source"', async () => {
+    const { list } = await import('@vercel/blob');
+    const { getReferencedBlobUrls } = await import('./repo');
+    const src = blob('sources/orphan.zip', 5000, hoursAgo(100));
+    (getReferencedBlobUrls as any).mockResolvedValue(new Set());
+    (list as any).mockResolvedValue({ blobs: [src], hasMore: false });
+    const report = await findOrphanedBlobs({ now: NOW });
+    expect(report.orphans).toHaveLength(1);
+    expect(report.orphans[0].kind).toBe('source');
+  });
+
+  it('blob sources/ referencjonowany przez projekt Studio → NIE sierota', async () => {
+    const { list } = await import('@vercel/blob');
+    const { getReferencedBlobUrls } = await import('./repo');
+    const { getStudioReferencedBlobUrls } = await import('@/lib/studio/repo');
+    const src = blob('sources/used.zip', 5000, hoursAgo(100));
+    (getReferencedBlobUrls as any).mockResolvedValue(new Set());
+    (getStudioReferencedBlobUrls as any).mockResolvedValue(new Set([src.url]));
+    (list as any).mockResolvedValue({ blobs: [src], hasMore: false });
+    const report = await findOrphanedBlobs({ now: NOW });
+    expect(report.referencedCount).toBe(1);
+    expect(report.orphans).toHaveLength(0);
+  });
 });
 
 describe('deleteOrphanedBlobs', () => {
@@ -190,6 +217,7 @@ describe('deleteOrphanedBlobs', () => {
         byKind: {
           model: { count: 1, bytes: 100 },
           thumbnail: { count: 1, bytes: 50 },
+          source: { count: 0, bytes: 0 },
           unknown: { count: 0, bytes: 0 },
         },
       },

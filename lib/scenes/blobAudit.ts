@@ -1,7 +1,8 @@
 // lib/scenes/blobAudit.ts
 // Audyt osieroconych plików w Vercel Blob: pliki w store, których NIE wskazuje
-// żadna scena (model_blob_url / thumb_blob_url). Store jest globalny, więc audyt
-// patrzy na referencje ze WSZYSTKICH scen (getReferencedBlobUrls).
+// żadna scena (model/thumb_blob_url) ANI żaden projekt Studio (source/thumb_blob_url).
+// Store jest globalny, więc audyt sumuje referencje ze WSZYSTKICH scen
+// (getReferencedBlobUrls) i projektów Studio (getStudioReferencedBlobUrls).
 //
 // Bezpieczeństwo kasowania:
 //   • okno bezpieczeństwa — świeży plik (np. upload modelu przed zapisem sceny)
@@ -12,11 +13,12 @@
 
 import { list, del } from '@vercel/blob';
 import { getReferencedBlobUrls } from './repo';
+import { getStudioReferencedBlobUrls } from '@/lib/studio/repo';
 
 /** Domyślne okno bezpieczeństwa: pliki młodsze niż tyle godzin nie są kasowalne. */
 export const DEFAULT_SAFETY_WINDOW_HOURS = 24;
 
-export type OrphanKind = 'model' | 'thumbnail' | 'unknown';
+export type OrphanKind = 'model' | 'thumbnail' | 'source' | 'unknown';
 
 export interface OrphanBlob {
   url: string;
@@ -58,6 +60,7 @@ interface AuditOpts {
 function kindFromPath(pathname: string): OrphanKind {
   if (pathname.startsWith('models/')) return 'model';
   if (pathname.startsWith('thumbnails/')) return 'thumbnail';
+  if (pathname.startsWith('sources/')) return 'source';
   return 'unknown';
 }
 
@@ -66,7 +69,13 @@ export async function findOrphanedBlobs(opts: AuditOpts = {}): Promise<OrphanRep
   const now = opts.now ?? Date.now();
   const safetyWindowHours = opts.safetyWindowHours ?? DEFAULT_SAFETY_WINDOW_HOURS;
 
-  const referenced = await getReferencedBlobUrls();
+  // Store Blob jest globalny: sieroty to pliki nie wskazane ani przez scenę,
+  // ani przez projekt Studio. Sumujemy oba zbiory referencji.
+  const [sceneRefs, studioRefs] = await Promise.all([
+    getReferencedBlobUrls(),
+    getStudioReferencedBlobUrls(),
+  ]);
+  const referenced = new Set<string>([...sceneRefs, ...studioRefs]);
 
   // Pętla po stronach — listujemy CAŁY store, nie tylko pierwszą stronę.
   let totalBlobs = 0;
@@ -108,6 +117,7 @@ export function orphanListStats(
   const byKind: Record<OrphanKind, { count: number; bytes: number }> = {
     model: { count: 0, bytes: 0 },
     thumbnail: { count: 0, bytes: 0 },
+    source: { count: 0, bytes: 0 },
     unknown: { count: 0, bytes: 0 },
   };
   let bytes = 0;
