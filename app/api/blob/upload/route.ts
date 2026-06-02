@@ -20,23 +20,28 @@ export async function POST(request: Request): Promise<NextResponse> {
       body,
       request,
       onBeforeGenerateToken: async (pathname) => {
-        // Upewniamy się, że ścieżka jest dozwolona (modele i miniatury).
+        // Dozwolone prefiksy: models/ (sceny .glb), thumbnails/ (miniatury),
+        // sources/ (edytowalne źródła Studio: .glb lub .zip multi-file glTF).
         const allowed =
-          pathname.startsWith('models/') || pathname.startsWith('thumbnails/');
+          pathname.startsWith('models/') ||
+          pathname.startsWith('thumbnails/') ||
+          pathname.startsWith('sources/');
         if (!allowed) {
           throw new Error(`Niedozwolona ścieżka Blob: ${pathname}`);
         }
 
+        const isThumb = pathname.startsWith('thumbnails/');
         return {
           allowedContentTypes: [
             'model/gltf-binary',
             'application/octet-stream',
+            'application/zip',
             'image/png',
           ],
-          // Maksymalny rozmiar: 1 GB dla modeli (duże .glb), 5 MB dla miniatur.
-          // Uwaga: modele >100 MB ładują się wolno w przeglądarce i mocno zużywają
-          // transfer/Blob — warto je kompresować (Draco / meshopt / gltfpack).
-          maximumSizeInBytes: pathname.startsWith('models/') ? MAX_MODEL_BYTES : MAX_THUMB_BYTES,
+          // Miniatury: 5 MB; modele i źródła Studio: do 1 GB.
+          // Modele >100 MB ładują się wolno i mocno zużywają transfer/Blob —
+          // warto kompresować (Draco / meshopt / gltfpack).
+          maximumSizeInBytes: isThumb ? MAX_THUMB_BYTES : MAX_MODEL_BYTES,
           tokenPayload: JSON.stringify({ userId: user.id }),
         };
       },
