@@ -27,6 +27,7 @@ export function Outliner() {
   const selected = useStore((s) => s.selected);
   const setSelected = useStore((s) => s.setSelected);
   const fileName = useStore((s) => s.loadedModel?.fileName);
+  const studioMaterials = useStore((s) => s.studioMaterials);
   const cameras = useStore((s) => s.config.camera.cameras);
   const activeCam = useStore((s) => s.config.camera.active);
   const moveCamera = useStore((s) => s.moveCamera);
@@ -47,6 +48,13 @@ export function Outliner() {
   ];
   if (fileName) {
     rows.push({ kind: 'item', id: 'actor', label: fileName, icon: '🔒', depth: 1, hint: 'aktor' });
+  }
+
+  if (studioMaterials.length > 0) {
+    rows.push({ kind: 'section', label: 'Materiały' });
+    for (const m of studioMaterials) {
+      rows.push({ kind: 'item', id: `mat:${m.key}`, label: m.name, icon: '🎨', depth: 1 });
+    }
   }
 
   rows.push({ kind: 'section', label: 'Światła' });
