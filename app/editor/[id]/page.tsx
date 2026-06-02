@@ -18,10 +18,8 @@ interface Props {
  * przekazuje dane do komponentu klienckiego.
  */
 export default async function EditorScenePage({ params }: Props) {
-  const user = await requireUser();
   // requireUser przekierowuje na /login jeśli niezalogowany.
-
-  const { id } = await params;
+  const [user, { id }] = await Promise.all([requireUser(), params]);
   const scene = await getScene(id);
 
   if (!scene) notFound();

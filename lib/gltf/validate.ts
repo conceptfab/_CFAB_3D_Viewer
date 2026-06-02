@@ -12,7 +12,7 @@ const SUPPORTED_REQUIRED_EXTENSIONS = new Set<string>([
 const GLB_MAGIC = 0x46546c67; // 'glTF'
 const GLB_CHUNK_JSON = 0x4e4f534a; // 'JSON'
 
-export const DEFAULT_MAX_BYTES = 1_000_000_000; // 1 GB (zgodnie z lib/blob/limits)
+const DEFAULT_MAX_BYTES = 1_000_000_000; // 1 GB (zgodnie z lib/blob/limits)
 
 const mb = (n: number) => Math.round(n / 1_000_000);
 

@@ -131,6 +131,7 @@ export function PermissionsPanel({ sceneId }: Props) {
             <input
               type="email"
               placeholder="adres@email.com"
+              aria-label="Adres e-mail użytkownika"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

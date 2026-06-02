@@ -7,6 +7,12 @@ import Image from 'next/image';
 import type { SceneRecord } from '@/lib/scenes/types';
 import { useRenameScene } from './useRenameScene';
 
+const DATE_FMT = new Intl.DateTimeFormat('pl-PL', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
 interface SceneCardProps {
   scene: SceneRecord;
   onDelete: (id: string) => void;
@@ -34,11 +40,7 @@ export function SceneCard({ scene, onDelete, onRename }: SceneCardProps) {
     }
   };
 
-  const dateStr = new Intl.DateTimeFormat('pl-PL', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(scene.updatedAt));
+  const dateStr = DATE_FMT.format(new Date(scene.updatedAt));
 
   return (
     <article className="scene-card">

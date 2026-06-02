@@ -88,6 +88,7 @@ export function ModelDropzone() {
         ref={inputRef}
         type="file"
         accept=".glb,model/gltf-binary"
+        aria-label="Wczytaj plik modelu .glb"
         style={{ display: 'none' }}
         onChange={(e) => {
           const file = e.target.files?.[0];

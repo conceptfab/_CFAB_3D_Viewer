@@ -59,6 +59,7 @@ export function AssetDropzone() {
         } catch (err) { setModelError(`Odczyt wejścia nieudany: ${(err as Error).message}`); }
       }}>
       <input ref={inputRef} type="file" multiple
+        aria-label="Wczytaj folder modelu"
         // @ts-expect-error webkitdirectory nie jest w typach React
         webkitdirectory=""
         style={{ display: 'none' }}

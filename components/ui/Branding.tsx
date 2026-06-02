@@ -59,6 +59,7 @@ export function Branding() {
         ref={inputRef}
         type="file"
         accept={ACCEPT}
+        aria-label="Wczytaj obraz logo"
         style={{ display: 'none' }}
         onChange={(e) => {
           const file = e.target.files?.[0];

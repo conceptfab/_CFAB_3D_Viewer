@@ -34,6 +34,7 @@ const OrphanRow = memo(function OrphanRow({
           type="checkbox"
           checked={checked}
           onChange={handleCheck}
+          aria-label="Zaznacz plik do usunięcia"
           title={
             orphan.deletable
               ? 'Zaznacz do usunięcia'
@@ -225,6 +226,7 @@ export default function OrphanBlobSection({
                       checked={allOrphanUrls.length > 0 && selected.size === allOrphanUrls.length}
                       onChange={toggleAllOrphans}
                       disabled={allOrphanUrls.length === 0}
+                      aria-label="Zaznacz/odznacz wszystkie pliki"
                       title="Zaznacz/odznacz wszystkie"
                     />
                   </th>

@@ -89,6 +89,7 @@ export default function AdminPanel({
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
             placeholder="email@example.com"
+            aria-label="Adres e-mail nowego użytkownika"
             required
             style={styles.input}
           />

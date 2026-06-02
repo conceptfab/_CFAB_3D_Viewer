@@ -19,9 +19,11 @@ export interface AccessDeps {
  * Import DB jest lazy — nie łamie testów jednostkowych.
  */
 export async function defaultDeps(): Promise<AccessDeps> {
-  const { db } = await import('@/lib/db');
-  const { scenePermissions, shareLinks } = await import('@/lib/scenes/schema');
-  const { eq, and, isNull } = await import('drizzle-orm');
+  const [{ db }, { scenePermissions, shareLinks }, { eq, and, isNull }] = await Promise.all([
+    import('@/lib/db'),
+    import('@/lib/scenes/schema'),
+    import('drizzle-orm'),
+  ]);
 
   return {
     findPermission: async (sceneId, userId) => {
