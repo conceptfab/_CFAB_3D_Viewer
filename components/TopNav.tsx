@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { LogoutButton } from './LogoutButton';
 
-type NavKey = 'home' | 'gallery' | 'editor' | 'admin';
+type NavKey = 'home' | 'gallery' | 'editor' | 'studio' | 'admin';
 
 export function TopNav({
   isAdmin,
@@ -63,6 +63,7 @@ export function TopNav({
       {item('/', 'Moje sceny', 'home')}
       {item('/gallery', 'Galeria', 'gallery')}
       {item('/editor', '+ Nowa scena', 'editor')}
+      {item('/studio', 'Studio', 'studio')}
       {isAdmin && item('/admin', 'Admin', 'admin')}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ fontSize: 13, color: 'var(--muted)' }}>{email}</span>
