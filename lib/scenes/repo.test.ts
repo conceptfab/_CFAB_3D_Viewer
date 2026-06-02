@@ -186,18 +186,24 @@ describe('getReferencedBlobUrls', () => {
 });
 
 describe('deleteScene', () => {
-  it('kasuje miniaturę zawsze i model gdy nie współdzielony', async () => {
+  it('kasuje miniaturę i model gdy żadne nie współdzielone', async () => {
     const { db } = await import('@/lib/db');
     const { del } = await import('@vercel/blob');
 
-    // getScene returns mockSceneRecord
+    // Kolejność select: getScene → countModelReferences → countThumbReferences
     (db.select as any)
       .mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([mockSceneRecord]),
         }),
       })
-      // countShared: 0 innych scen z tym modelem (countModelReferences zwraca rows.length)
+      // countModel: 0 innych scen z tym modelem
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      })
+      // countThumb: 0 innych scen z tą miniaturą
       .mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([]),
@@ -210,7 +216,7 @@ describe('deleteScene', () => {
 
     await deleteScene(MOCK_SCENE_ID);
 
-    // del wywołany dwukrotnie: thumb + model — z właściwymi URL-ami
+    // del wywołany dwukrotnie: thumb + model — oba nie-współdzielone
     expect(del).toHaveBeenCalledTimes(2);
     expect(del).toHaveBeenCalledWith(mockSceneRecord.thumbBlobUrl);
     expect(del).toHaveBeenCalledWith(mockSceneRecord.modelBlobUrl);
@@ -227,10 +233,16 @@ describe('deleteScene', () => {
           where: vi.fn().mockResolvedValue([mockSceneRecord]),
         }),
       })
-      // countShared: 1 inna scena współdzieli ten model (countModelReferences zwraca rows.length)
+      // countModel: 1 inna scena współdzieli ten model → model NIE kasowany
       .mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([{ id: 'other-scene' }]),
+        }),
+      })
+      // countThumb: 0 → miniatura nie-współdzielona → kasowana
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
         }),
       });
 
@@ -240,9 +252,45 @@ describe('deleteScene', () => {
 
     await deleteScene(MOCK_SCENE_ID);
 
-    // del wywołany tylko raz: thumb (model NIE kasowany)
+    // del wywołany tylko raz: thumb (model NIE kasowany — współdzielony)
     expect(del).toHaveBeenCalledTimes(1);
     expect(del).toHaveBeenCalledWith(mockSceneRecord.thumbBlobUrl);
+  });
+
+  it('NIE kasuje miniatury gdy współdzielona (scena utworzona z presetu)', async () => {
+    const { db } = await import('@/lib/db');
+    const { del } = await import('@vercel/blob');
+    vi.clearAllMocks();
+
+    (db.select as any)
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([mockSceneRecord]),
+        }),
+      })
+      // countModel: 0 → model kasowany
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      })
+      // countThumb: 1 inna scena/preset współdzieli tę miniaturę → NIE kasowana
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ id: 'preset-or-other' }]),
+        }),
+      });
+
+    (db.delete as any).mockReturnValue({
+      where: vi.fn().mockResolvedValue(undefined),
+    });
+
+    await deleteScene(MOCK_SCENE_ID);
+
+    // thumb współdzielony → NIE kasowany; model nie-współdzielony → kasowany
+    expect(del).toHaveBeenCalledTimes(1);
+    expect(del).toHaveBeenCalledWith(mockSceneRecord.modelBlobUrl);
+    expect(del).not.toHaveBeenCalledWith(mockSceneRecord.thumbBlobUrl);
   });
 });
 

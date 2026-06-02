@@ -102,10 +102,17 @@ export async function deleteScene(id: string): Promise<void> {
   const scene = await getScene(id);
   if (!scene) return;
 
-  // Ref-count: ile innych scen używa tego samego model_blob_url?
+  // Ref-count modelu I miniatury: oba bywają WSPÓŁDZIELONE (instantiatePreset
+  // kopiuje model_blob_url ORAZ thumb_blob_url presetu na scenę-instancję), więc
+  // oba muszą być ref-counted. Bez ref-countu miniatury usunięcie sceny z presetu
+  // kasowało współdzieloną miniaturę presetu (→ zepsuta miniatura presetu).
   let sharedModelCount = 0;
   if (scene.modelBlobUrl) {
     sharedModelCount = await countModelReferences(scene.modelBlobUrl, id);
+  }
+  let sharedThumbCount = 0;
+  if (scene.thumbBlobUrl) {
+    sharedThumbCount = await countThumbReferences(scene.thumbBlobUrl, id);
   }
 
   // Usuń rekord z DB — to jest najważniejsze i musi się udać.
@@ -115,7 +122,7 @@ export async function deleteScene(id: string): Promise<void> {
   // w skasowanym/innym store → „Vercel Blob: This store does not exist"), NIE
   // może to wywalić całego DELETE — rekord jest już usunięty. Logujemy i idziemy dalej.
   try {
-    if (scene.thumbBlobUrl) await del(scene.thumbBlobUrl);
+    if (scene.thumbBlobUrl && sharedThumbCount === 0) await del(scene.thumbBlobUrl);
     if (scene.modelBlobUrl && sharedModelCount === 0) await del(scene.modelBlobUrl);
   } catch (err) {
     console.warn(
@@ -153,6 +160,28 @@ export async function countModelReferences(
     .where(
       and(
         eq(scenes.modelBlobUrl, modelBlobUrl),
+        ne(scenes.id, excludeSceneId)
+      )
+    );
+  return rows.length;
+}
+
+/**
+ * Zlicza ile scen w DB wskazuje na dany thumb_blob_url (poza podanym sceneId).
+ * Miniatury bywają współdzielone (instantiatePreset kopiuje URL miniatury presetu),
+ * więc deleteScene ref-countuje je tak samo jak model — inaczej usunięcie sceny
+ * utworzonej z presetu skasowałoby współdzieloną miniaturę presetu.
+ */
+export async function countThumbReferences(
+  thumbBlobUrl: string,
+  excludeSceneId: string
+): Promise<number> {
+  const rows = await db
+    .select({ id: scenes.id })
+    .from(scenes)
+    .where(
+      and(
+        eq(scenes.thumbBlobUrl, thumbBlobUrl),
         ne(scenes.id, excludeSceneId)
       )
     );
