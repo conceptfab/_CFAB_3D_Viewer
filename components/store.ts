@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import type { Group } from 'three';
+import type { VirtualFs } from '@/lib/gltf/types';
 
 export type ToneMode = 'NEUTRAL' | 'ACES_FILMIC' | 'AGX' | 'REINHARD';
 
@@ -75,6 +77,9 @@ export interface SceneConfig {
   shadows: { catcherOpacity: number; contactOpacity: number; contactBlur: number };
   tone: { mode: ToneMode; exposure: number };
   material: { envMapIntensity: number };
+  /** Nie-destrukcyjne nadpisania materiałów per indeks materiału glTF.
+   *  Pusty w Etapie 1; pełny kształt dopina Etap 2 (edytor materiałów). */
+  materialOverrides: Record<string, unknown>;
   antialiasing: AntialiasingMode;
   // Plakietka brandingowa w lewym górnym rogu finalnego widoku.
   branding: {
@@ -131,6 +136,7 @@ export const DEFAULT_CONFIG: SceneConfig = {
   shadows: { catcherOpacity: 0.3, contactOpacity: 0.3, contactBlur: 2 },
   tone: { mode: 'NEUTRAL', exposure: 1.0 },
   material: { envMapIntensity: 1.0 },
+  materialOverrides: {},
   antialiasing: 'SMAA_MEDIUM',
   branding: {
     mode: 'text',
@@ -251,6 +257,19 @@ interface State {
   setShadows: (patch: Partial<SceneConfig['shadows']>) => void;
   setTone: (patch: Partial<SceneConfig['tone']>) => void;
   setMaterial: (patch: Partial<SceneConfig['material']>) => void;
+  /** Nakłada ustawienia SCENY z presetu (bez modelu i bez materialOverrides). */
+  applyPreset: (preset: SceneConfig) => void;
+
+  // ── Runtime Studio (NIE serializowane) ──
+  /** Wczytany model Studio (THREE.Group z loadFromFiles). */
+  studioScene: Group | null;
+  /** Wirtualny FS zaimportowanego źródła (do zapisu). */
+  studioVfs: VirtualFs | null;
+  /** Klucz roota w studioVfs. */
+  studioRoot: string | null;
+  /** Ustawia (lub czyści) komplet importu Studio. */
+  setStudioImport: (data: { scene: Group; vfs: VirtualFs; root: string } | null) => void;
+
   setAntialiasing: (mode: AntialiasingMode) => void;
   setBranding: (patch: Partial<SceneConfig['branding']>) => void;
   setHero: (patch: Partial<SceneConfig['hero']>) => void;
@@ -309,6 +328,33 @@ export const useStore = create<State>((set) => ({
     set((s) => ({ config: { ...s.config, tone: { ...s.config.tone, ...patch } } })),
   setMaterial: (patch) =>
     set((s) => ({ config: { ...s.config, material: { ...s.config.material, ...patch } } })),
+  applyPreset: (preset) =>
+    set((s) => ({
+      config: {
+        ...s.config,
+        environment: preset.environment,
+        background: preset.background,
+        keyLight: preset.keyLight,
+        shadows: preset.shadows,
+        tone: preset.tone,
+        material: preset.material,
+        antialiasing: preset.antialiasing,
+        branding: preset.branding,
+        camera: preset.camera,
+        // hero i materialOverrides NIE z presetu (zostają bieżące).
+      },
+    })),
+
+  studioScene: null,
+  studioVfs: null,
+  studioRoot: null,
+  setStudioImport: (data) =>
+    set(
+      data
+        ? { studioScene: data.scene, studioVfs: data.vfs, studioRoot: data.root, modelError: null }
+        : { studioScene: null, studioVfs: null, studioRoot: null }
+    ),
+
   setAntialiasing: (mode) =>
     set((s) => ({ config: { ...s.config, antialiasing: mode } })),
   setBranding: (patch) =>

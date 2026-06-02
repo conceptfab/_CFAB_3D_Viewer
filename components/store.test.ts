@@ -203,3 +203,39 @@ describe('nowy stan edytora + settery', () => {
     expect(kl.position).toEqual(DEFAULT_CONFIG.keyLight.position);
   });
 });
+
+describe('materialOverrides + applyPreset + studio slice (Studio)', () => {
+  beforeEach(() => {
+    useStore.setState({
+      config: structuredClone(DEFAULT_CONFIG),
+      studioScene: null, studioVfs: null, studioRoot: null,
+    });
+  });
+
+  it('DEFAULT_CONFIG ma puste materialOverrides', () => {
+    expect(DEFAULT_CONFIG.materialOverrides).toEqual({});
+  });
+
+  it('applyPreset nadpisuje ustawienia sceny, NIE rusza materialOverrides', () => {
+    useStore.setState((s) => ({ config: { ...s.config, materialOverrides: { '0': { color: '#fff' } } } }));
+    const preset = structuredClone(DEFAULT_CONFIG);
+    preset.tone = { mode: 'AGX', exposure: 1.7 };
+    preset.environment = { hdriUrl: 'https://x/y.hdr', intensity: 0.9 };
+    useStore.getState().applyPreset(preset);
+    const cfg = useStore.getState().config;
+    expect(cfg.tone.mode).toBe('AGX');
+    expect(cfg.environment.intensity).toBe(0.9);
+    expect(cfg.materialOverrides).toEqual({ '0': { color: '#fff' } });
+  });
+
+  it('setStudioImport ustawia i czyści slice', () => {
+    const fakeScene = {} as unknown as import('three').Group;
+    const fakeVfs = new Map() as import('@/lib/gltf/types').VirtualFs;
+    useStore.getState().setStudioImport({ scene: fakeScene, vfs: fakeVfs, root: 'scene.gltf' });
+    expect(useStore.getState().studioRoot).toBe('scene.gltf');
+    expect(useStore.getState().studioScene).toBe(fakeScene);
+    useStore.getState().setStudioImport(null);
+    expect(useStore.getState().studioScene).toBeNull();
+    expect(useStore.getState().studioVfs).toBeNull();
+  });
+});
