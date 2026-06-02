@@ -12,6 +12,7 @@ import {
   type AimGizmoMode,
 } from '../store';
 import { MODEL_CATALOG } from '../models/catalog';
+import { type MaterialOverride } from '@/lib/studio/materials';
 
 const TONE_OPTIONS: ToneMode[] = ['NEUTRAL', 'ACES_FILMIC', 'AGX', 'REINHARD'];
 const GIZMO_MODES: GizmoMode[] = ['translate', 'rotate', 'scale'];
@@ -423,6 +424,40 @@ function LightTargetControls() {
   return null;
 }
 
+/* --- Materiał (override per indeks) --- */
+function MaterialControls({ matKey }: { matKey: string }) {
+  const info = useStore.getState().studioMaterials.find((m) => m.key === matKey);
+  const ov = useStore.getState().config.materialOverrides[matKey] ?? {};
+  const base = info?.base ?? {};
+  const set = (patch: MaterialOverride) =>
+    useStore.getState().setMaterialOverride(matKey, patch);
+
+  useControls(
+    `Materiał: ${info?.name ?? matKey}`,
+    () => ({
+      color: { value: ov.color ?? base.color ?? '#ffffff', onChange: (v: string) => set({ color: v }) },
+      metalness: { value: ov.metalness ?? base.metalness ?? 0, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ metalness: v }) },
+      roughness: { value: ov.roughness ?? base.roughness ?? 1, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ roughness: v }) },
+      emissive: { value: ov.emissive ?? base.emissive ?? '#000000', onChange: (v: string) => set({ emissive: v }) },
+      emissiveIntensity: { value: ov.emissiveIntensity ?? base.emissiveIntensity ?? 1, min: 0, max: 5, step: 0.01, onChange: (v: number) => set({ emissiveIntensity: v }) },
+      opacity: { value: ov.opacity ?? base.opacity ?? 1, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ opacity: v }) },
+      transparent: { value: ov.transparent ?? base.transparent ?? false, onChange: (v: boolean) => set({ transparent: v }) },
+      ...(info?.hasNormalMap
+        ? { normalScale: { value: ov.normalScale ?? base.normalScale ?? 1, min: 0, max: 2, step: 0.01, onChange: (v: number) => set({ normalScale: v }) } }
+        : {}),
+      ...(info?.hasClearcoat
+        ? {
+            clearcoat: { value: ov.clearcoat ?? base.clearcoat ?? 0, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ clearcoat: v }) },
+            clearcoatRoughness: { value: ov.clearcoatRoughness ?? base.clearcoatRoughness ?? 0, min: 0, max: 1, step: 0.01, onChange: (v: number) => set({ clearcoatRoughness: v }) },
+          }
+        : {}),
+      'Reset materiału': button(() => useStore.getState().resetMaterialOverride(matKey)),
+    }),
+    [matKey]
+  );
+  return null;
+}
+
 /** Inspektor kontekstowy — panel adekwatny do zaznaczonego elementu outlinera. */
 const PANEL_IDS = ['render', 'background', 'environment', 'branding', 'hero', 'actor', 'light'];
 
@@ -431,8 +466,9 @@ export function Inspector() {
   const camId = selected.startsWith('cam:') ? selected.slice(4) : null;
   const camTgtId = selected.startsWith('camtgt:') ? selected.slice(7) : null;
   const isLightTgt = selected === 'lighttgt';
+  const matKey = selected.startsWith('mat:') ? selected.slice(4) : null;
   // Nic / nierozpoznane zaznaczenie → parametry sceny (jak 'scene').
-  const showScene = !camId && !camTgtId && !isLightTgt && !PANEL_IDS.includes(selected);
+  const showScene = !camId && !camTgtId && !isLightTgt && !matKey && !PANEL_IDS.includes(selected);
   return (
     <div className="inspector">
       {showScene && <SceneControls />}
@@ -446,6 +482,7 @@ export function Inspector() {
       {isLightTgt && <LightTargetControls />}
       {camId && <CameraControls key={camId} id={camId} />}
       {camTgtId && <CameraTargetControls key={`tgt-${camTgtId}`} id={camTgtId} />}
+      {matKey && <MaterialControls key={`mat-${matKey}`} matKey={matKey} />}
       <div className="inspector__panel">
         <Leva fill flat titleBar={false} />
       </div>
