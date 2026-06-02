@@ -267,8 +267,10 @@ interface State {
   studioVfs: VirtualFs | null;
   /** Klucz roota w studioVfs. */
   studioRoot: string | null;
+  /** Disposer ostatniego wczytanego modelu (revoke object-URL-e + DRACOLoader). */
+  studioDispose: (() => void) | null;
   /** Ustawia (lub czyści) komplet importu Studio. */
-  setStudioImport: (data: { scene: Group; vfs: VirtualFs; root: string } | null) => void;
+  setStudioImport: (data: { scene: Group; vfs: VirtualFs; root: string; dispose?: () => void } | null) => void;
 
   setAntialiasing: (mode: AntialiasingMode) => void;
   setBranding: (patch: Partial<SceneConfig['branding']>) => void;
@@ -296,7 +298,7 @@ interface State {
   setGlRef: (gl: { domElement: HTMLCanvasElement } | null) => void;
 }
 
-export const useStore = create<State>((set) => ({
+export const useStore = create<State>((set, get) => ({
   config: DEFAULT_CONFIG,
   loadedModel: null,
   modelSize: [1, 1.4, 1],
@@ -348,12 +350,16 @@ export const useStore = create<State>((set) => ({
   studioScene: null,
   studioVfs: null,
   studioRoot: null,
-  setStudioImport: (data) =>
+  studioDispose: null,
+  setStudioImport: (data) => {
+    const prev = get().studioDispose;
+    if (prev) prev();
     set(
       data
-        ? { studioScene: data.scene, studioVfs: data.vfs, studioRoot: data.root, modelError: null }
-        : { studioScene: null, studioVfs: null, studioRoot: null }
-    ),
+        ? { studioScene: data.scene, studioVfs: data.vfs, studioRoot: data.root, studioDispose: data.dispose ?? null, modelError: null }
+        : { studioScene: null, studioVfs: null, studioRoot: null, studioDispose: null }
+    );
+  },
 
   setAntialiasing: (mode) =>
     set((s) => ({ config: { ...s.config, antialiasing: mode } })),

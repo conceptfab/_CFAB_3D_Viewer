@@ -1,6 +1,6 @@
 // components/studio/StudioShell.tsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { StudioViewport } from './StudioViewport';
 import { ViewToggle, type StudioMode } from './ViewToggle';
@@ -16,6 +16,9 @@ export function StudioShell({ projectId, initialTitle }: { projectId?: string; i
   const [title, setTitle] = useState(initialTitle ?? 'Nowy model');
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [pid, setPid] = useState(projectId);
+
+  useEffect(() => () => useStore.getState().setStudioImport(null), []);
 
   async function handleSave() {
     const st = useStore.getState();
@@ -24,7 +27,7 @@ export function StudioShell({ projectId, initialTitle }: { projectId?: string; i
     setBusy(true);
     try {
       const { id } = await saveProject({
-        projectId,
+        projectId: pid,
         title,
         vfs: st.studioVfs,
         rootKey: st.studioRoot,
@@ -32,7 +35,10 @@ export function StudioShell({ projectId, initialTitle }: { projectId?: string; i
         glRef: st.glRef,
       });
       setToast('Zapisano.');
-      if (!projectId) window.history.replaceState(null, '', `/studio/${id}`);
+      if (!pid) {
+        setPid(id);
+        window.history.replaceState(null, '', `/studio/${id}`);
+      }
     } catch (e) { setToast(e instanceof Error ? e.message : 'Błąd zapisu.'); }
     finally { setBusy(false); }
   }

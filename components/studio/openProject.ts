@@ -7,13 +7,13 @@ import type { StudioProjectRecord } from '@/lib/studio/types';
 import type { VirtualFs } from '@/lib/gltf/types';
 import type * as THREE from 'three';
 
-export async function openProjectSource(project: StudioProjectRecord): Promise<{ scene: THREE.Group; vfs: VirtualFs; root: string }> {
+export async function openProjectSource(project: StudioProjectRecord): Promise<{ scene: THREE.Group; vfs: VirtualFs; root: string; dispose: () => void }> {
   const res = await fetch(project.sourceBlobUrl);
   if (!res.ok) throw new Error(`Nie udało się pobrać źródła: ${res.status}`);
   const blob = await res.blob();
   const vfs = await rebuildVfsFromSource(blob, project.sourceKind, project.sourceFileName);
   const root = pickDefaultRoot(findModelRoots(vfs));
   if (!root) throw new Error('Źródło nie zawiera pliku modelu.');
-  const { scene } = await loadFromFiles(vfs, root);
-  return { scene: scene as THREE.Group, vfs, root };
+  const { scene, dispose } = await loadFromFiles(vfs, root);
+  return { scene: scene as THREE.Group, vfs, root, dispose };
 }

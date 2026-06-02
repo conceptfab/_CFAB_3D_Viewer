@@ -8,7 +8,7 @@ import { Studio } from '../viewer/Studio';
 import { Postprocess } from '../viewer/Postprocess';
 import { CameraRig } from '../viewer/CameraRig';
 import { StudioActor } from './StudioActor';
-import { useStore, DEFAULT_CONFIG } from '../store';
+import { useStore } from '../store';
 import type { StudioMode } from './ViewToggle';
 
 function EditLights() {
@@ -26,9 +26,6 @@ export function StudioViewport({ mode }: { mode: StudioMode }) {
   const [sx, sy, sz] = useStore((s) => s.modelSize);
   const R = Math.max(sx, sy, sz, 1) * 2.4;
   const midY = sy * 0.5;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const cam = DEFAULT_CONFIG.camera;
-
   return (
     <Canvas
       shadows

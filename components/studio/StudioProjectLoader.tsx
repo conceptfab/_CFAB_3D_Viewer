@@ -13,8 +13,8 @@ export function StudioProjectLoader({ project }: { project: StudioProjectRecord 
   useEffect(() => {
     useStore.setState({ config: normalizeConfig(project.config) });
     openProjectSource(project)
-      .then(({ scene, vfs, root }) => {
-        useStore.getState().setStudioImport({ scene, vfs, root });
+      .then(({ scene, vfs, root, dispose }) => {
+        useStore.getState().setStudioImport({ scene, vfs, root, dispose });
       })
       .catch((e) => setErr(e instanceof Error ? e.message : 'Błąd otwarcia.'));
     // eslint-disable-next-line react-hooks/exhaustive-deps

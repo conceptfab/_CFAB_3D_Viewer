@@ -36,8 +36,8 @@ export function AssetDropzone() {
       const rep = await validateGltf(fs, root);
       setReport(rep);
       if (rep.ok) {
-        const { scene } = await loadFromFiles(fs, root);
-        setStudioImport({ scene: scene as THREE.Group, vfs: fs, root });
+        const { scene, dispose } = await loadFromFiles(fs, root);
+        setStudioImport({ scene: scene as THREE.Group, vfs: fs, root, dispose });
       }
     } catch (e) {
       setModelError(`Wczytanie nieudane: ${(e as Error).message}`);
