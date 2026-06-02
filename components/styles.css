@@ -1099,3 +1099,324 @@ html, body, #root {
   font-size: 12px;
   color: var(--muted, #6f747e);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Studio — /studio page: toolbar + viewport + panel
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/*  Three-zone grid:
+      [toolbar] spanning full width           ← 48px row
+      [viewport] | [panel ~360px]             ← fill remaining height       */
+.studio-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  grid-template-rows: 48px 1fr;
+  grid-template-areas:
+    "toolbar toolbar"
+    "viewport panel";
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── Toolbar ────────────────────────────────────────────────────────────── */
+.studio-toolbar {
+  grid-area: toolbar;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+.studio-back {
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  padding: 4px 6px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  transition: color 120ms, background 120ms;
+}
+.studio-back:hover { color: var(--ink); background: var(--surface-3); }
+
+/* Title input — styled like .save-scene-modal input[type="text"] but compact */
+.studio-title {
+  flex: 1;
+  min-width: 100px;
+  max-width: 260px;
+  padding: 5px 9px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 120ms;
+}
+.studio-title:focus { border-color: var(--accent); }
+.studio-title::placeholder { color: var(--faint); }
+
+/* Toolbar save button */
+.studio-toolbar > button[type="button"]:last-of-type {
+  flex-shrink: 0;
+  padding: 5px 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.studio-toolbar > button[type="button"]:last-of-type:hover:not(:disabled) { background: var(--accent-hover); }
+.studio-toolbar > button[type="button"]:last-of-type:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── View toggle (Edit / Render) ────────────────────────────────────────── */
+.studio-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.studio-toggle button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.studio-toggle button:hover:not(.is-active) { background: var(--surface-3); color: var(--ink); }
+.studio-toggle button.is-active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ── Viewport + Panel ───────────────────────────────────────────────────── */
+.studio-viewport {
+  grid-area: viewport;
+  position: relative;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: #202227;
+}
+
+.studio-panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #14151a;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+/* ── Asset dropzone ─────────────────────────────────────────────────────── */
+.asset-dropzone {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  transition: border-color 120ms, background 120ms;
+  position: relative;
+}
+.asset-dropzone.is-drag {
+  border-color: var(--accent);
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--ink);
+}
+
+.asset-dropzone button[type="button"] {
+  appearance: none;
+  border: none;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms;
+}
+.asset-dropzone button[type="button"]:hover { background: var(--surface-3); }
+
+.asset-dropzone__hint {
+  font-size: 11px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* ── Import report ──────────────────────────────────────────────────────── */
+.import-report {
+  margin-top: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--ink);
+  line-height: 1.5;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  min-width: 260px;
+  max-width: 400px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.import-report__fatal {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  color: var(--danger);
+}
+.import-report__fatal li { padding: 2px 0; }
+
+.import-report__warn {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  color: #f59e0b;
+}
+.import-report__warn li { padding: 2px 0; }
+
+/* ── Root picker ────────────────────────────────────────────────────────── */
+.root-picker {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  font-size: 12px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  min-width: 220px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.root-picker p { margin: 0 0 6px; color: var(--muted); }
+.root-picker ul { list-style: none; padding: 0; margin: 0; }
+.root-picker li + li { margin-top: 3px; }
+.root-picker button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--accent-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  padding: 3px 4px;
+  border-radius: 3px;
+}
+.root-picker button:hover { background: var(--surface-3); color: var(--ink); }
+
+/* ── Preset picker ──────────────────────────────────────────────────────── */
+.preset-picker {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.preset-picker > button[type="button"] {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms;
+}
+.preset-picker > button[type="button"]:hover { background: var(--surface-3); }
+
+.preset-picker__list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 30;
+  min-width: 180px;
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.preset-picker__list li { padding: 0; }
+.preset-picker__list button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 14px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.preset-picker__list button:hover { background: var(--surface-3); }
+.preset-picker__list li:last-child button { color: var(--muted); font-style: italic; }
+
+/* ── Responsive: stack panel under viewport on narrow screens ───────────── */
+@media (max-width: 820px) {
+  .studio-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 48px 60dvh auto;
+    grid-template-areas:
+      "toolbar"
+      "viewport"
+      "panel";
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .studio-viewport {
+    height: 60dvh;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .studio-panel {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    min-height: 50dvh;
+  }
+
+  .studio-title {
+    max-width: 120px;
+  }
+}
