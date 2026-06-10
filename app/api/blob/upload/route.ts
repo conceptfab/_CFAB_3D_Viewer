@@ -10,8 +10,12 @@ import { MAX_MODEL_BYTES, MAX_THUMB_BYTES } from '@/lib/blob/limits';
  * Ścieżki dozwolone: models/<uuid>.glb oraz thumbnails/<uuid>.png.
  */
 export async function POST(request: Request): Promise<NextResponse> {
-  const user = await requireUser();
-  // requireUser rzuca redirect/401 jeśli niezalogowany — obsługa jest w requireUser.
+  let user;
+  try {
+    user = await requireUser();
+  } catch {
+    return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 });
+  }
 
   const body = (await request.json()) as HandleUploadBody;
 

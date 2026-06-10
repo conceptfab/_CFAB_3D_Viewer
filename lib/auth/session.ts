@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'crypto';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sessions, users } from '@/lib/db/schema';
 import { eq, and, gt } from 'drizzle-orm';
@@ -127,6 +128,32 @@ export async function requireAdmin(): Promise<User> {
     const { redirect } = await import('next/navigation');
     redirect('/');
   }
+  return user;
+}
+
+// ─── Bramki autoryzacji dla tras API (route handlers) ────────────────────────
+// requireUser/requireAdmin używają redirect() (dobre dla server components, ale
+// w route handlerach dają 307 zamiast czystego JSON-a). Poniższe warianty zwracają
+// NextResponse 401/403 — spójny kontrakt API.
+
+/**
+ * Zwraca zalogowanego użytkownika albo NextResponse 401.
+ * Użycie: `const u = await requireUserApi(); if (u instanceof NextResponse) return u;`
+ */
+export async function requireUserApi(): Promise<User | NextResponse> {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 });
+  return user;
+}
+
+/**
+ * Zwraca zalogowanego admina albo NextResponse 401 (brak sesji) / 403 (nie-admin).
+ * Użycie: `const u = await requireAdminApi(); if (u instanceof NextResponse) return u;`
+ */
+export async function requireAdminApi(): Promise<User | NextResponse> {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 });
+  if (user.role !== 'admin') return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 });
   return user;
 }
 

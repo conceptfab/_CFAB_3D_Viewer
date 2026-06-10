@@ -41,7 +41,12 @@ const CreateSceneSchema = z.object({
 });
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const user = await requireUser();
+  let user;
+  try {
+    user = await requireUser();
+  } catch {
+    return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 });
+  }
 
   let body: unknown;
   try {

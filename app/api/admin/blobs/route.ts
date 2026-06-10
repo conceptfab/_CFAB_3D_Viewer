@@ -1,13 +1,14 @@
 // app/api/admin/blobs/route.ts
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireAdminApi } from '@/lib/auth/session';
 import { findOrphanedBlobs, deleteOrphanedBlobs } from '@/lib/scenes/blobAudit';
 
 // ─── GET /api/admin/blobs ────────────────────────────────────────────────────
 // Raport osieroconych plików w Vercel Blob. Admin-only.
 export async function GET(): Promise<NextResponse> {
-  await requireAdmin();
+  const auth = await requireAdminApi();
+  if (auth instanceof NextResponse) return auth;
   const report = await findOrphanedBlobs();
   return NextResponse.json(report);
 }
@@ -22,7 +23,8 @@ const DeleteSchema = z.object({
 });
 
 export async function DELETE(request: Request): Promise<NextResponse> {
-  await requireAdmin();
+  const auth = await requireAdminApi();
+  if (auth instanceof NextResponse) return auth;
 
   let body: unknown;
   try {

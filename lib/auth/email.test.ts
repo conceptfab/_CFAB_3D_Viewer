@@ -18,6 +18,13 @@ describe('buildLoginEmail', () => {
     const { text } = buildLoginEmail('123456', 'http://localhost:3000');
     expect(text).toContain('15');
   });
+
+  it('escapuje znaki HTML w appUrl (brak wstrzyknięcia znaczników)', () => {
+    const { html } = buildLoginEmail('123456', 'https://x/"><script>alert(1)</script>');
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('&lt;script&gt;');
+    expect(html).toContain('&quot;');
+  });
 });
 
 describe('sendLoginCode', () => {

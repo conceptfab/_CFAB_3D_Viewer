@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/lib/auth/cookie-name';
 
 // Ścieżki chronione — brak cookie → redirect /login.
-const PROTECTED_PATHS = ['/', '/editor', '/admin', '/gallery'];
+const PROTECTED_PATHS = ['/', '/editor', '/admin', '/gallery', '/studio'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -31,6 +31,7 @@ export function middleware(request: NextRequest) {
     PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/')) ||
     pathname.startsWith('/api/admin/') ||
     pathname.startsWith('/api/scenes') ||
+    pathname.startsWith('/api/studio') ||
     pathname.startsWith('/api/blob/');
 
   if (!isProtected) {

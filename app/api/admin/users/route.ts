@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireAdminApi } from '@/lib/auth/session';
 import { normalizeEmail, adminPostSchema } from '@/lib/validation';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
@@ -7,7 +7,8 @@ import { asc, eq } from 'drizzle-orm';
 
 // GET /api/admin/users — lista wszystkich użytkowników
 export async function GET() {
-  await requireAdmin();
+  const auth = await requireAdminApi();
+  if (auth instanceof NextResponse) return auth;
 
   const rows = await db
     .select()
@@ -19,7 +20,8 @@ export async function GET() {
 
 // POST /api/admin/users — dodaj użytkownika na białą listę
 export async function POST(req: Request) {
-  await requireAdmin();
+  const auth = await requireAdminApi();
+  if (auth instanceof NextResponse) return auth;
 
   let body: unknown;
   try {

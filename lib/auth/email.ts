@@ -1,12 +1,27 @@
 import nodemailer from 'nodemailer';
 import type Mail from 'nodemailer/lib/mailer';
 
+/**
+ * Escapuje znaki specjalne HTML. appUrl pochodzi ze zmiennej środowiskowej
+ * (nie z inputu użytkownika), ale escapujemy defensywnie — gdyby kiedyś trafiła
+ * tam wartość kontrolowana z zewnątrz, nie wstrzyknie znaczników do treści maila.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /** Treść i HTML wiadomości z kodem logowania. */
 export function buildLoginEmail(
   code: string,
   appUrl: string
 ): { subject: string; text: string; html: string } {
   const subject = `Twój kod logowania: ${code}`;
+  const safeAppUrl = escapeHtml(appUrl);
 
   const text = `
 Witaj,
@@ -26,7 +41,7 @@ Jeśli nie prosiłeś/aś o ten kod, zignoruj tę wiadomość.
 <head><meta charset="utf-8"></head>
 <body style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 20px; color: #1c1917;">
   <h2 style="margin: 0 0 16px;">Kod logowania</h2>
-  <p>Twój kod logowania do <a href="${appUrl}">${appUrl}</a>:</p>
+  <p>Twój kod logowania do <a href="${safeAppUrl}">${safeAppUrl}</a>:</p>
   <div style="font-size: 36px; font-weight: 700; letter-spacing: 8px; text-align: center;
               padding: 24px; background: #f5f5f4; border-radius: 8px; margin: 24px 0;">
     ${code}

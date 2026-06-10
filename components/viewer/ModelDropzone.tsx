@@ -99,7 +99,7 @@ export function ModelDropzone() {
       {!loadedModel && (
         <div className="dropzone-hint">
           <b>Przeciągnij plik .glb tutaj</b>
-          <span>albo użyj „Wczytaj plik" w panelu</span>
+          <span>albo użyj „Wczytaj plik” w panelu</span>
         </div>
       )}
     </div>

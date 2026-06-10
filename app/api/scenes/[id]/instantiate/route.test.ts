@@ -32,11 +32,11 @@ describe('POST /api/scenes/[id]/instantiate', () => {
   it('zwraca 201 z nową sceną przy poprawnym klonowaniu', async () => {
     (instantiatePreset as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_SCENE);
 
-    const req = new NextRequest('http://localhost/api/scenes/preset-001/instantiate', {
+    const req = new NextRequest('http://localhost/api/scenes/11111111-1111-4111-8111-111111111111/instantiate', {
       method: 'POST',
     });
 
-    const res = await POST(req, { params: Promise.resolve({ id: 'preset-001' }) });
+    const res = await POST(req, { params: Promise.resolve({ id: '11111111-1111-4111-8111-111111111111' }) });
     expect(res.status).toBe(201);
     const json = await res.json();
     expect(json.id).toBe('new-scene-id');
@@ -48,11 +48,11 @@ describe('POST /api/scenes/[id]/instantiate', () => {
       new Error('Preset nie istnieje')
     );
 
-    const req = new NextRequest('http://localhost/api/scenes/nie-ma/instantiate', {
+    const req = new NextRequest('http://localhost/api/scenes/22222222-2222-4222-8222-222222222222/instantiate', {
       method: 'POST',
     });
 
-    const res = await POST(req, { params: Promise.resolve({ id: 'nie-ma' }) });
+    const res = await POST(req, { params: Promise.resolve({ id: '22222222-2222-4222-8222-222222222222' }) });
     expect(res.status).toBe(404);
   });
 
@@ -61,11 +61,21 @@ describe('POST /api/scenes/[id]/instantiate', () => {
       new Error('Scena nie jest presetem')
     );
 
-    const req = new NextRequest('http://localhost/api/scenes/scena/instantiate', {
+    const req = new NextRequest('http://localhost/api/scenes/33333333-3333-4333-8333-333333333333/instantiate', {
       method: 'POST',
     });
 
-    const res = await POST(req, { params: Promise.resolve({ id: 'scena' }) });
+    const res = await POST(req, { params: Promise.resolve({ id: '33333333-3333-4333-8333-333333333333' }) });
     expect(res.status).toBe(422);
+  });
+
+  it('zwraca 400 dla identyfikatora spoza formatu UUID', async () => {
+    const req = new NextRequest('http://localhost/api/scenes/not-a-uuid/instantiate', {
+      method: 'POST',
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: 'not-a-uuid' }) });
+    expect(res.status).toBe(400);
+    expect(instantiatePreset).not.toHaveBeenCalled();
   });
 });

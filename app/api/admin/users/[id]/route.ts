@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireAdminApi } from '@/lib/auth/session';
 import { adminPatchSchema } from '@/lib/validation';
 import { canRemoveAdmin } from '@/lib/auth/access';
 import { db } from '@/lib/db';
@@ -14,7 +14,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await requireAdmin();
+  const auth = await requireAdminApi();
+  if (auth instanceof NextResponse) return auth;
   const { id } = await params;
 
   if (!UUID_RE.test(id)) {
@@ -93,7 +94,8 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await requireAdmin();
+  const auth = await requireAdminApi();
+  if (auth instanceof NextResponse) return auth;
   const { id } = await params;
 
   if (!UUID_RE.test(id)) {
